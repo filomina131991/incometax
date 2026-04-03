@@ -1,5 +1,5 @@
 {
   "name": "School Income Tax Manager",
   "description": "A comprehensive web application for managing school teachers' income tax calculations, financial years, and profiles with automated retirement and tax slab logic.",
-  "requestFramePermissions": []
+  "requestFramePermissions": ["xr-spatial-tracking"]
 }

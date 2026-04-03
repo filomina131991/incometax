@@ -41,293 +41,472 @@ export default function TaxStatementPrint({ mode, teacher, fy, monthlyData, taxC
 
   const f = (val: any) => formatCurrency(n(val));
 
-  const renderAnticipatoryOrFinal = () => (
-    <div className="border-2 border-black p-8 text-black font-serif">
-      <div className="text-center mb-8">
-        <h1 className="text-2xl font-bold uppercase underline mb-2">
-          {mode === 'Anticipatory' ? 'Anticipatory Income Tax Statement' : 'Final Income Tax Statement'}
-        </h1>
-        <h2 className="text-xl font-bold">{fy.year}</h2>
-        <p className="text-lg font-bold mt-2">{fy.schoolName}</p>
-      </div>
+  const renderAnticipatoryOrFinal = () => {
+    const isAnticipatory = mode === 'Anticipatory';
+    const months = ['March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December', 'January', 'February'];
+    const firstHalf = months.slice(0, 6);
+    const secondHalf = months.slice(6);
 
-      <div className="grid grid-cols-2 gap-4 mb-8 border-b-2 border-black pb-4">
-        <div>
-          <p><span className="font-bold">Name:</span> {teacher.name}</p>
-          <p><span className="font-bold">Designation:</span> {teacher.designation}</p>
-          <p><span className="font-bold">PEN:</span> {teacher.penNumber}</p>
+    return (
+      <div className="p-8 text-black bg-white" style={{ fontFamily: "'Times New Roman', Times, serif" }} id="printable-area">
+        <div className="text-center mb-4">
+          <h1 className="text-xl font-bold uppercase underline">
+            {isAnticipatory ? 'Anticipatory Income Tax Statement for the Financial Year' : 'Income Tax Statement for the Financial Year'} {fy.year}
+          </h1>
+          <p className="text-sm font-bold">(Assessment Year 2026-2027)</p>
         </div>
-        <div>
-          <p><span className="font-bold">PAN:</span> {teacher.panNumber}</p>
-          <p><span className="font-bold">Aadhaar:</span> {teacher.aadhaarNumber}</p>
-          <p><span className="font-bold">Regime:</span> {teacher.taxRegime || 'New'}</p>
-        </div>
-      </div>
 
-      <table className="w-full border-collapse border border-black mb-8 text-sm">
-        <thead>
-          <tr className="bg-gray-100">
-            <th className="border border-black px-2 py-1">Month</th>
-            <th className="border border-black px-2 py-1">Basic Pay</th>
-            <th className="border border-black px-2 py-1">DA</th>
-            <th className="border border-black px-2 py-1">HRA</th>
-            <th className="border border-black px-2 py-1">Other</th>
-            <th className="border border-black px-2 py-1">Gross</th>
-            <th className="border border-black px-2 py-1">PF/NPS</th>
-            <th className="border border-black px-2 py-1">GIS/SLI</th>
-            <th className="border border-black px-2 py-1">Other Ded</th>
-            <th className="border border-black px-2 py-1">TDS</th>
-            <th className="border border-black px-2 py-1">Total Ded</th>
-            <th className="border border-black px-2 py-1">Net</th>
-          </tr>
-        </thead>
-        <tbody>
-          {monthlyData.map((m) => {
-            const gross = n(m.basicPay) + n(m.da) + n(m.hra) + n(m.ca) + n(m.otherAllowance);
-            const totalDed = n(m.pf) + n(m.gis) + n(m.sli) + n(m.lic) + n(m.medisep) + n(m.gpais) + n(m.nps) + n(m.tds);
-            return (
-              <tr key={m.month}>
-                <td className="border border-black px-2 py-1 font-bold">{m.month}</td>
-                <td className="border border-black px-2 py-1 text-right">{n(m.basicPay)}</td>
-                <td className="border border-black px-2 py-1 text-right">{n(m.da)}</td>
-                <td className="border border-black px-2 py-1 text-right">{n(m.hra)}</td>
-                <td className="border border-black px-2 py-1 text-right">{n(m.ca) + n(m.otherAllowance)}</td>
-                <td className="border border-black px-2 py-1 text-right font-bold">{gross}</td>
-                <td className="border border-black px-2 py-1 text-right">{n(m.pf) + n(m.nps)}</td>
-                <td className="border border-black px-2 py-1 text-right">{n(m.gis) + n(m.sli)}</td>
-                <td className="border border-black px-2 py-1 text-right">{n(m.lic) + n(m.medisep) + n(m.gpais)}</td>
-                <td className="border border-black px-2 py-1 text-right">{n(m.tds)}</td>
-                <td className="border border-black px-2 py-1 text-right">{totalDed}</td>
-                <td className="border border-black px-2 py-1 text-right font-bold">{gross - totalDed}</td>
-              </tr>
-            );
-          })}
-          {(n(taxCalc.festivalAllowance) > 0 || n(taxCalc.daArrear) > 0 || n(taxCalc.payRevisionArrear) > 0 || n(taxCalc.otherIncome) > 0) && (
+        <div className="grid grid-cols-2 gap-x-8 gap-y-1 mb-2 text-[13px]">
+          <div className="flex">
+            <span className="font-bold w-36">Name of Employee:</span>
+            <span className="border-b border-black flex-1">{teacher.name}</span>
+          </div>
+          <div className="flex">
+            <span className="font-bold w-12">PAN:</span>
+            <span className="border-b border-black flex-1">{teacher.panNumber}</span>
+          </div>
+          <div className="flex">
+            <span className="font-bold w-36">Designation:</span>
+            <span className="border-b border-black flex-1">{teacher.designation}</span>
+          </div>
+          <div className="flex">
+            <span className="font-bold w-12">Office:</span>
+            <span className="border-b border-black flex-1">{fy.schoolName}</span>
+          </div>
+          <div className="flex">
+            <span className="font-bold w-36">Category:</span>
+            <span className="border-b border-black flex-1">Individual (Age: {teacher.category || 'below 60 years'})</span>
+          </div>
+          <div className="flex">
+            <span className="font-bold w-32">Income Tax Slab:</span>
+            <span className="border-b border-black flex-1">{teacher.taxRegime || 'NEW'} Regime</span>
+          </div>
+        </div>
+
+        <p className="text-[11px] mb-2">to be furnished by the employees / officers whose income exceeds Rs. 2,50,000/-</p>
+
+        <table className="w-full border-collapse border border-black text-[12px]">
+          <tbody>
+            {/* Row 1 */}
             <tr>
-              <td className="border border-black px-2 py-1 font-bold">Other Incomes</td>
-              <td className="border border-black px-2 py-1 text-right">-</td>
-              <td className="border border-black px-2 py-1 text-right">-</td>
-              <td className="border border-black px-2 py-1 text-right">-</td>
-              <td className="border border-black px-2 py-1 text-right">
-                {n(taxCalc.festivalAllowance) + n(taxCalc.daArrear) + n(taxCalc.payRevisionArrear) + n(taxCalc.otherIncome)}
-              </td>
-              <td className="border border-black px-2 py-1 text-right font-bold">
-                {n(taxCalc.festivalAllowance) + n(taxCalc.daArrear) + n(taxCalc.payRevisionArrear) + n(taxCalc.otherIncome)}
-              </td>
-              <td className="border border-black px-2 py-1 text-right">-</td>
-              <td className="border border-black px-2 py-1 text-right">-</td>
-              <td className="border border-black px-2 py-1 text-right">-</td>
-              <td className="border border-black px-2 py-1 text-right">-</td>
-              <td className="border border-black px-2 py-1 text-right">-</td>
-              <td className="border border-black px-2 py-1 text-right font-bold">
-                {n(taxCalc.festivalAllowance) + n(taxCalc.daArrear) + n(taxCalc.payRevisionArrear) + n(taxCalc.otherIncome)}
+              <td className="border border-black p-1 w-8 text-center font-bold align-top" rowSpan={5}>1</td>
+              <td className="border border-black p-1 w-6 text-center font-bold align-top">a</td>
+              <td className="border border-black p-1 font-bold" colSpan={2}>
+                Gross Salary / Pension for the month : (includes Basic Pay, DA, HRA, CCA, Interim Relief, OT Allowance,
+                Deputation Allowance, Medical Allowance, etc.)
               </td>
             </tr>
-          )}
-          <tr className="bg-gray-50 font-bold">
-            <td className="border border-black px-2 py-1">TOTAL</td>
-            <td className="border border-black px-2 py-1 text-right">{monthlyData.reduce((acc, m) => acc + n(m.basicPay), 0)}</td>
-            <td className="border border-black px-2 py-1 text-right">{monthlyData.reduce((acc, m) => acc + n(m.da), 0)}</td>
-            <td className="border border-black px-2 py-1 text-right">{monthlyData.reduce((acc, m) => acc + n(m.hra), 0)}</td>
-            <td className="border border-black px-2 py-1 text-right">{monthlyData.reduce((acc, m) => acc + (n(m.ca) + n(m.otherAllowance)), 0) + (n(taxCalc.festivalAllowance) + n(taxCalc.daArrear) + n(taxCalc.payRevisionArrear) + n(taxCalc.otherIncome))}</td>
-            <td className="border border-black px-2 py-1 text-right">{n(taxCalc.grossSalary)}</td>
-            <td className="border border-black px-2 py-1 text-right">{monthlyData.reduce((acc, m) => acc + (n(m.pf) + n(m.nps)), 0)}</td>
-            <td className="border border-black px-2 py-1 text-right">{monthlyData.reduce((acc, m) => acc + (n(m.gis) + n(m.sli)), 0)}</td>
-            <td className="border border-black px-2 py-1 text-right">{monthlyData.reduce((acc, m) => acc + (n(m.lic) + n(m.medisep) + n(m.gpais)), 0)}</td>
-            <td className="border border-black px-2 py-1 text-right">{monthlyData.reduce((acc, m) => acc + n(m.tds), 0)}</td>
-            <td className="border border-black px-2 py-1 text-right">{monthlyData.reduce((acc, m) => acc + (n(m.pf) + n(m.gis) + n(m.sli) + n(m.lic) + n(m.medisep) + n(m.gpais) + n(m.nps) + n(m.tds)), 0)}</td>
-            <td className="border border-black px-2 py-1 text-right">{n(taxCalc.grossSalary) - monthlyData.reduce((acc, m) => acc + (n(m.pf) + n(m.gis) + n(m.sli) + n(m.lic) + n(m.medisep) + n(m.gpais) + n(m.nps) + n(m.tds)), 0)}</td>
-          </tr>
-        </tbody>
-      </table>
+            <tr>
+              <td className="border border-black p-0" colSpan={3}>
+                <div className="grid grid-cols-2">
+                  <div className="border-r border-black">
+                    {firstHalf.map(month => {
+                      const data = monthlyData.find(m => m.month === month);
+                      const gross = n(data?.basicPay) + n(data?.da) + n(data?.hra) + n(data?.ca) + n(data?.otherAllowance);
+                      return (
+                        <div key={month} className="flex justify-between border-b border-black last:border-b-0 px-4 py-0.5">
+                          <span className="font-bold">{month} 2025 :</span>
+                          <span>{gross || ''}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <div>
+                    {secondHalf.map((month, idx) => {
+                      const year = idx < 4 ? '2025' : '2026';
+                      const data = monthlyData.find(m => m.month === month);
+                      const gross = n(data?.basicPay) + n(data?.da) + n(data?.hra) + n(data?.ca) + n(data?.otherAllowance);
+                      return (
+                        <div key={month} className="flex justify-between border-b border-black last:border-b-0 px-4 py-0.5">
+                          <span className="font-bold">{month} {year} :</span>
+                          <span>{gross || ''}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td className="border border-black p-1 w-6 text-center font-bold align-top">b</td>
+              <td className="border border-black p-1">
+                <div className="space-y-0.5">
+                  <div className="flex justify-between"><span>Leave Surrender</span><span></span></div>
+                  <div className="flex justify-between"><span>Festival Allowance / Bonus / Ex-gratia and Incentive</span><span>{n(taxCalc.festivalAllowance) || ''}</span></div>
+                  <div className="flex justify-between"><span>Pay Revision Arrears, DA Arrears, Other Arrears</span><span>{n(taxCalc.daArrear) + n(taxCalc.payRevisionArrear) || ''}</span></div>
+                  <div className="flex justify-between"><span>Other Salary Income</span><span>{n(taxCalc.otherIncome) || ''}</span></div>
+                </div>
+              </td>
+              <td className="border border-black p-1 w-32 text-right align-bottom">
+                {n(taxCalc.festivalAllowance) + n(taxCalc.daArrear) + n(taxCalc.payRevisionArrear) + n(taxCalc.otherIncome) || ''}
+              </td>
+            </tr>
+            <tr>
+              <td className="border border-black p-1 w-6 text-center font-bold align-top">c</td>
+              <td className="border border-black p-1">Excess Pay drawn, Dies non, etc.</td>
+              <td className="border border-black p-1 w-32 text-right"></td>
+            </tr>
+            <tr className="font-bold bg-gray-50">
+              <td className="border border-black p-1" colSpan={2}>Total Salary Income (a+b-c)</td>
+              <td className="border border-black p-1 text-right">{n(taxCalc.grossSalary)}</td>
+            </tr>
 
-      <div className="grid grid-cols-2 gap-8 mb-8">
-        <div className="space-y-2">
-          <h3 className="font-bold underline">Tax Calculation Summary</h3>
-          <div className="flex justify-between"><span>Gross Salary:</span> <span>{f(taxCalc.grossSalary)}</span></div>
-          <div className="flex justify-between"><span>Standard Deduction:</span> <span>{f(taxCalc.standardDeduction)}</span></div>
-          <div className="flex justify-between font-bold border-t border-black pt-1"><span>Taxable Income:</span> <span>{f(taxCalc.taxableIncome)}</span></div>
-          <div className="flex justify-between"><span>Tax on Total Income:</span> <span>{f(taxCalc.taxOnTotal)}</span></div>
-          {n(taxCalc.marginalRelief) > 0 && (
-            <div className="flex justify-between text-sm italic"><span>Less: Marginal Relief u/s 87A:</span> <span>- {f(taxCalc.marginalRelief)}</span></div>
-          )}
-          <div className="flex justify-between"><span>Health & Education Cess (4%):</span> <span>{f(taxCalc.cess)}</span></div>
-          <div className="flex justify-between font-bold border-t border-black pt-1"><span>Total Tax Payable:</span> <span>{f(taxCalc.totalTax)}</span></div>
-          <div className="flex justify-between"><span>Tax Already Deducted:</span> <span>{f(taxCalc.taxDeducted)}</span></div>
-          <div className="flex justify-between font-bold border-t-2 border-black pt-1 text-lg"><span>Balance Tax to be Paid:</span> <span>{f(taxCalc.balance)}</span></div>
-        </div>
-        <div className="flex flex-col justify-end items-center">
-          <div className="border-t border-black w-48 text-center pt-2">
-            <p className="font-bold">Signature of Teacher</p>
-            <p className="text-xs mt-1">Date: {new Date().toLocaleDateString()}</p>
+            {/* Row 2 */}
+            <tr>
+              <td className="border border-black p-1 text-center font-bold align-top" rowSpan={7}>2</td>
+              <td className="border border-black p-1 font-bold" colSpan={2}>Deduct:</td>
+              <td className="border border-black p-1"></td>
+            </tr>
+            <tr>
+              <td className="border border-black p-1 text-center font-bold">a</td>
+              <td className="border border-black p-1">Standard Deduction (Rs. {fy.standardDeduction || 75000}/-)</td>
+              <td className="border border-black p-1 text-right">{n(taxCalc.standardDeduction)}</td>
+            </tr>
+            <tr>
+              <td className="border border-black p-1 text-center font-bold">b</td>
+              <td className="border border-black p-1">Conveyance Allowance</td>
+              <td className="border border-black p-1 text-right"></td>
+            </tr>
+            <tr>
+              <td className="border border-black p-1 text-center font-bold">c</td>
+              <td className="border border-black p-1">NPS - Employer's Contribution</td>
+              <td className="border border-black p-1 text-right"></td>
+            </tr>
+            <tr>
+              <td className="border border-black p-1 text-center font-bold">d</td>
+              <td className="border border-black p-1"></td>
+              <td className="border border-black p-1 text-right"></td>
+            </tr>
+            <tr>
+              <td className="border border-black p-1 text-center font-bold">e</td>
+              <td className="border border-black p-1"></td>
+              <td className="border border-black p-1 text-right"></td>
+            </tr>
+            <tr>
+              <td className="border border-black p-1 text-center font-bold">f</td>
+              <td className="border border-black p-1"></td>
+              <td className="border border-black p-1 text-right"></td>
+            </tr>
+
+            {/* Row 3-15 */}
+            <tr>
+              <td className="border border-black p-1 text-center font-bold">3</td>
+              <td className="border border-black p-1" colSpan={2}>Any other income (Business, Capital Gains or Other Sources)</td>
+              <td className="border border-black p-1 text-right"></td>
+            </tr>
+            <tr className="font-bold bg-gray-50">
+              <td className="border border-black p-1 text-center">4</td>
+              <td className="border border-black p-1" colSpan={2}>Total Income rounded off to nearest multiple of ten rupees ( 1 - 2 + 3 )</td>
+              <td className="border border-black p-1 text-right">{n(taxCalc.taxableIncome)}</td>
+            </tr>
+            <tr>
+              <td className="border border-black p-1 text-center font-bold">5</td>
+              <td className="border border-black p-1" colSpan={2}>Tax on Total Income</td>
+              <td className="border border-black p-1 text-right">{n(taxCalc.taxOnTotal)}</td>
+            </tr>
+            <tr>
+              <td className="border border-black p-1 text-center font-bold">6</td>
+              <td className="border border-black p-1" colSpan={2}>Less: Rebate for the Income upto 12 Lakhs u/s 87 A (Max: Rs. 60,000/-)</td>
+              <td className="border border-black p-1 text-right">{n(taxCalc.marginalRelief)}</td>
+            </tr>
+            <tr className="font-bold bg-gray-50">
+              <td className="border border-black p-1 text-center">7</td>
+              <td className="border border-black p-1" colSpan={2}>Income tax after Rebate ( 5 - 6 )</td>
+              <td className="border border-black p-1 text-right">{Math.max(0, n(taxCalc.taxOnTotal) - n(taxCalc.marginalRelief))}</td>
+            </tr>
+            <tr>
+              <td className="border border-black p-1 text-center font-bold">8</td>
+              <td className="border border-black p-1" colSpan={2}>Surcharge [ 10% of (7) if (4) &gt; 50 lakh; 15% if &gt; 1 crore; 25% if &gt; 2 crore ]</td>
+              <td className="border border-black p-1 text-right"></td>
+            </tr>
+            <tr>
+              <td className="border border-black p-1 text-center font-bold">9</td>
+              <td className="border border-black p-1" colSpan={2}>Health and Education Cess [ @ 4% of (7+8) ]</td>
+              <td className="border border-black p-1 text-right">{n(taxCalc.cess)}</td>
+            </tr>
+            <tr className="font-bold bg-gray-50">
+              <td className="border border-black p-1 text-center">10</td>
+              <td className="border border-black p-1" colSpan={2}>Total Tax Payable ( 7 + 8 + 9 )</td>
+              <td className="border border-black p-1 text-right">{n(taxCalc.totalTax)}</td>
+            </tr>
+            <tr>
+              <td className="border border-black p-1 text-center font-bold">11</td>
+              <td className="border border-black p-1" colSpan={2}>Less: Relief for arrears of salary u/s. 89(1)</td>
+              <td className="border border-black p-1 text-right"></td>
+            </tr>
+            <tr className="font-bold bg-gray-50">
+              <td className="border border-black p-1 text-center">12</td>
+              <td className="border border-black p-1" colSpan={2}>Balance Tax Payable ( 10 - 11 )</td>
+              <td className="border border-black p-1 text-right">{n(taxCalc.totalTax)}</td>
+            </tr>
+            <tr>
+              <td className="border border-black p-1 text-center font-bold">13</td>
+              <td className="border border-black p-1" colSpan={2}>Income tax deducted from salary, Advance tax paid</td>
+              <td className="border border-black p-1 text-right">{n(taxCalc.taxDeducted)}</td>
+            </tr>
+            <tr className="font-bold bg-gray-50">
+              <td className="border border-black p-1 text-center">14</td>
+              <td className="border border-black p-1" colSpan={2}>Balance Income Tax to be paid</td>
+              <td className="border border-black p-1 text-right">{n(taxCalc.balance)}</td>
+            </tr>
+            {isAnticipatory && (
+              <tr>
+                <td className="border border-black p-1 text-center font-bold">15</td>
+                <td className="border border-black p-1" colSpan={2}>Income Tax to be deducted monthly - 11 installments (Rounded up to 100)</td>
+                <td className="border border-black p-1 text-right">
+                  {n(taxCalc.balance) > 0 ? Math.ceil(n(taxCalc.balance) / 11) : 0}
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+
+        <div className="mt-12 grid grid-cols-2 text-sm">
+          <div className="space-y-4">
+            <p><span className="font-bold">Place:</span> {fy.place || ''}</p>
+            <p><span className="font-bold">Date:</span> {new Date().toLocaleDateString()}</p>
+          </div>
+          <div className="text-right flex flex-col items-end">
+            <p className="font-bold mr-24">Signature:</p>
+            {teacher.signatureUrl && (
+              <img src={teacher.signatureUrl} alt="Signature" className="h-12 mr-12 mt-2" referrerPolicy="no-referrer" />
+            )}
           </div>
         </div>
-      </div>
 
-      <div className="mt-12 text-center border-t-2 border-black pt-4">
-        <p className="font-bold uppercase">Certificate</p>
-        <p className="text-sm italic mt-2">
-          Certified that the above information is correct to the best of my knowledge and belief.
-        </p>
-        <div className="mt-12 flex justify-end">
-          <div className="border-t border-black w-64 text-center pt-2">
-            <p className="font-bold uppercase">Head of Institution</p>
-            <p className="text-xs mt-1">(Office Seal)</p>
-          </div>
+        <div className="mt-16 text-[9px] text-gray-400">
+          -ecostatt.com-
         </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   const renderForm12BB = () => (
-    <div className="border-2 border-black p-8 text-black font-serif">
-      <div className="text-center mb-8">
-        <h1 className="text-2xl font-bold uppercase mb-2">FORM NO. 12BB</h1>
-        <p className="text-sm">(See rule 26C)</p>
-        <p className="text-sm mt-2 font-bold">Statement showing particulars of claims by an employee for deduction of tax under section 192</p>
+    <div className="p-8 text-black bg-white" style={{ fontFamily: "'Times New Roman', Times, serif" }}>
+      <div className="text-center mb-6">
+        <h1 className="text-xl font-bold uppercase underline">FORM NO. 12BB</h1>
+        <p className="text-sm font-bold">(See rule 26C)</p>
+        <p className="text-[13px] mt-2 font-bold">Statement showing particulars of claims by an employee for deduction of tax under section 192</p>
       </div>
 
-      <div className="space-y-4 mb-8">
-        <p><span className="font-bold">1. Name and address of the employee:</span> {teacher.name}, {fy.schoolName}</p>
-        <p><span className="font-bold">2. Permanent Account Number (PAN):</span> {teacher.panNumber}</p>
-        <p><span className="font-bold">3. Financial Year:</span> {fy.year}</p>
+      <div className="space-y-4 mb-6 text-[14px]">
+        <div className="flex">
+          <span className="font-bold w-8">1</span>
+          <span className="font-bold w-64 text-left">Name and address of the employee</span>
+          <span className="font-bold w-4">:</span>
+          <span className="flex-1 border-b border-black">{teacher.name}, {fy.schoolName}</span>
+        </div>
+        <div className="flex">
+          <span className="font-bold w-8">2</span>
+          <span className="font-bold w-64 text-left">Permanent account number</span>
+          <span className="font-bold w-4">:</span>
+          <span className="flex-1 border-b border-black">{teacher.panNumber}</span>
+        </div>
+        <div className="flex">
+          <span className="font-bold w-8">3</span>
+          <span className="font-bold w-64 text-left">Financial year</span>
+          <span className="font-bold w-4">:</span>
+          <span className="flex-1 border-b border-black">{fy.year}</span>
+        </div>
       </div>
 
-      <table className="w-full border-collapse border border-black text-sm mb-8">
+      <table className="w-full border-collapse border border-black text-[12px] mb-6">
         <thead>
-          <tr className="bg-gray-100">
-            <th className="border border-black px-2 py-2 w-12">Sl.No.</th>
-            <th className="border border-black px-2 py-2">Nature of claim</th>
-            <th className="border border-black px-2 py-2 w-32">Amount (Rs.)</th>
-            <th className="border border-black px-2 py-2">Evidence / Particulars</th>
+          <tr>
+            <th className="border border-black p-1 text-center font-bold" colSpan={4}>Details of claims and evidence thereof</th>
           </tr>
-          <tr className="bg-gray-50 text-xs">
-            <th className="border border-black px-2 py-1">(1)</th>
-            <th className="border border-black px-2 py-1">(2)</th>
-            <th className="border border-black px-2 py-1">(3)</th>
-            <th className="border border-black px-2 py-1">(4)</th>
+          <tr className="bg-gray-50">
+            <th className="border border-black p-1 w-12 font-bold">Sl.No.</th>
+            <th className="border border-black p-1 font-bold">Nature of claim</th>
+            <th className="border border-black p-1 w-32 font-bold">Amount (Rs.)</th>
+            <th className="border border-black p-1 w-48 font-bold">Evidence /Particulars</th>
+          </tr>
+          <tr className="bg-gray-50 text-[10px]">
+            <th className="border border-black p-0.5 font-bold">(1)</th>
+            <th className="border border-black p-0.5 font-bold">(2)</th>
+            <th className="border border-black p-0.5 font-bold">(3)</th>
+            <th className="border border-black p-0.5 font-bold">(4)</th>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <td className="border border-black px-2 py-2 text-center">1.</td>
-            <td className="border border-black px-2 py-2">
+            <td className="border border-black p-1 text-center font-bold align-top">1.</td>
+            <td className="border border-black p-1">
               <p className="font-bold">House Rent Allowance:</p>
-              <p>(i) Rent Paid to the Landlord</p>
-              <p>(ii) Name of the landlord</p>
-              <p>(iii) Address of the landlord</p>
-              <p>(iv) PAN of the landlord</p>
+              <div className="pl-4 space-y-0.5">
+                <p>(i) Rent Paid to the Landlord:</p>
+                <p>(ii) Name of the landlord:</p>
+                <p>(iii) Address of the landlord:</p>
+                <br/>
+                <p>(iv) PAN of the landlord:</p>
+                <p className="text-[10px] font-bold italic">Note: Permanent Account Number shall be furnished if the aggregate rent paid during the previous year exceeds onelakh rupees</p>
+              </div>
             </td>
-            <td className="border border-black px-2 py-2 text-right"></td>
-            <td className="border border-black px-2 py-2"></td>
+            <td className="border border-black p-1 text-right"></td>
+            <td className="border border-black p-1"></td>
           </tr>
           <tr>
-            <td className="border border-black px-2 py-2 text-center">2.</td>
-            <td className="border border-black px-2 py-2 font-bold">Leave travel concessions or assistance</td>
-            <td className="border border-black px-2 py-2 text-right"></td>
-            <td className="border border-black px-2 py-2"></td>
+            <td className="border border-black p-1 text-center font-bold align-top">2.</td>
+            <td className="border border-black p-1 font-bold">Leave travel concessions or assistance</td>
+            <td className="border border-black p-1 text-right"></td>
+            <td className="border border-black p-1"></td>
           </tr>
           <tr>
-            <td className="border border-black px-2 py-2 text-center">3.</td>
-            <td className="border border-black px-2 py-2">
-              <p className="font-bold">Deduction of interest on borrowing:</p>
-              <p>(i) Interest payable/paid to the lender</p>
-              <p>(ii) Name of the lender</p>
-              <p>(iii) Address of the lender</p>
-              <p>(iv) PAN of the lender</p>
+            <td className="border border-black p-1 text-center font-bold align-top">3.</td>
+            <td className="border border-black p-1">
+              <p className="font-bold">Deduction of interest on borrowing</p>
+              <div className="pl-4 space-y-0.5">
+                <p>(i) Interest payable/paid to the lender</p>
+                <p>(ii) Name of the lender</p>
+                <p>(iii) Address of the lender</p>
+                <br/>
+                <p>(iv) PAN of the lender (Financial Institution/Employer/Others)-If available</p>
+              </div>
             </td>
-            <td className="border border-black px-2 py-2 text-right"></td>
-            <td className="border border-black px-2 py-2"></td>
+            <td className="border border-black p-1 text-right"></td>
+            <td className="border border-black p-1"></td>
           </tr>
           <tr>
-            <td className="border border-black px-2 py-2 text-center">4.</td>
-            <td className="border border-black px-2 py-2">
-              <p className="font-bold">Deduction under Chapter VI-A:</p>
-              <p>(A) Section 80C, 80CCC and 80CCD</p>
-              <p className="pl-4">i) Section 80C (LIC, GPF, SLI, GIS, etc.)</p>
-              <p className="pl-4">ii) 80CCC Contribution to Pension Fund</p>
-              <p className="pl-4">iii) Contribution to NPS</p>
-              <p>(B) Other sections (80E, 80G, 80TTA, etc.)</p>
-              <p className="pl-4">i) 80D Mediclaim</p>
-              <p className="pl-4">ii) 80E Interest on Education Loan</p>
+            <td className="border border-black p-1 text-center font-bold align-top">4.</td>
+            <td className="border border-black p-1">
+              <p className="font-bold">Deduction under Chapter VI-A</p>
+              <p className="font-bold">(B) Other sections (e.g. 80E, 80G, 80TTA, etc.) under Chapter VI-A,</p>
+              <div className="pl-4 space-y-0.5">
+                <p>Housing Loan Interest</p>
+                <p>Mediclaim Policies</p>
+                <p>Medical treatment of dependent</p>
+                <p>Medical treatment of Self</p>
+                <p>Interest paid for Educational Loan</p>
+                <p>Donation to various charitable funds</p>
+                <p>Deduction for person with disability</p>
+                <p>Interest paid for Electric Vehicle Loan</p>
+                <p>Interest income for SB, Fixed deposit, ...</p>
+                <p>Remaining Contribution to NPS</p>
+                <p>NPS - Employer's Contribution</p>
+              </div>
             </td>
-            <td className="border border-black px-2 py-2 text-right">
-              <br/><br/><br/>
-              <p>{f(taxCalc.section80C || 0)}</p>
-              <br/><br/>
-              <p>{f(taxCalc.section80D || 0)}</p>
+            <td className="border border-black p-1 text-right align-bottom">
+              {f(taxCalc.section80D || 0)}
             </td>
-            <td className="border border-black px-2 py-2"></td>
+            <td className="border border-black p-1"></td>
+          </tr>
+          <tr>
+            <td className="border border-black p-1" colSpan={2}>
+              <p className="font-bold">(A) Section 80C, 80CCC and 80CCD</p>
+              <p className="font-bold">(i) Section 80C</p>
+              <div className="pl-4 space-y-0.5">
+                <p>a) LIC, PLI etc</p>
+                <p>b) Purchase of NSC VIII issue</p>
+                <p>c) Contribution to GPF</p>
+                <p>d) Contribution to SLI, GIS, FBS, GPAIS</p>
+                <p>e) Term deposit with Scheduled Bank</p>
+                <p>f) Mutual Fund or UTI</p>
+                <p>g) Tution fees</p>
+                <p>h) Housing Loan Repayment (Principal)</p>
+                <p>i) Contribution to PPF</p>
+                <p>j) Five year Time Deposit in Post Office</p>
+                <p>k)</p>
+                <p>l)</p>
+                <p>m)</p>
+                <p>n)</p>
+              </div>
+              <p className="font-bold mt-2">(ii) 80CCC Contribution to Pension Fund</p>
+              <p className="font-bold">(iii) Contribution to NPS</p>
+            </td>
+            <td className="border border-black p-1 text-right align-middle">
+              {f(taxCalc.section80C || 0)}
+            </td>
+            <td className="border border-black p-1"></td>
           </tr>
         </tbody>
       </table>
 
-      <div className="mt-12">
-        <p className="font-bold text-center underline mb-8">Verification</p>
-        <p className="text-justify leading-relaxed">
-          I, <span className="font-bold">{teacher.name}</span>, son/daughter of ........................................................................ do hereby certify that the information given above is complete and correct.
+      <div className="mt-8">
+        <p className="font-bold text-center underline mb-6">Verification</p>
+        <p className="text-justify leading-relaxed text-[13px]">
+          I, <span className="font-bold border-b border-dotted border-black px-4">{teacher.name}</span>, son/daughter of <span className="border-b border-dotted border-black flex-1 inline-block min-w-[200px]">........................................................................</span> do hereby certify that the information given above is complete and correct.
         </p>
-        <div className="mt-12 flex justify-between items-end">
-          <div className="space-y-2">
+        <div className="mt-10 grid grid-cols-2 text-[13px]">
+          <div className="space-y-4">
             <p><span className="font-bold">Place:</span> .........................</p>
             <p><span className="font-bold">Date:</span> {new Date().toLocaleDateString()}</p>
           </div>
-          <div className="text-center">
-            <div className="border-t border-black w-48 pt-2">
-              <p className="font-bold">Signature</p>
-              <p className="text-xs">Full Name: {teacher.name}</p>
-            </div>
+          <div className="text-right flex flex-col items-end">
+            <p className="font-bold mr-24">Signature:</p>
+            {teacher.signatureUrl && (
+              <img src={teacher.signatureUrl} alt="Signature" className="h-12 mr-12 mt-2" referrerPolicy="no-referrer" />
+            )}
           </div>
         </div>
+      </div>
+      <div className="mt-12 text-[9px] text-gray-400">
+        -ecostatt.com-
       </div>
     </div>
   );
 
   const renderForm16 = () => (
-    <div className="border-2 border-black p-8 text-black font-serif">
-      <div className="text-center mb-8">
-        <h1 className="text-2xl font-bold uppercase mb-2">FORM NO. 16</h1>
-        <p className="text-sm">[See rule 31(1)(a)]</p>
+    <div className="p-8 text-black bg-white" style={{ fontFamily: "'Times New Roman', Times, serif" }}>
+      <div className="text-center mb-6">
+        <h1 className="text-xl font-bold uppercase underline">FORM NO. 16</h1>
+        <p className="text-sm font-bold">[See rule 31(1)(a)]</p>
         <p className="text-lg font-bold mt-2">PART B (Annexure)</p>
       </div>
 
-      <table className="w-full border-collapse border border-black text-sm mb-8">
+      <table className="w-full border-collapse border border-black text-[12px] mb-6">
         <tbody>
           <tr>
-            <td className="border border-black px-4 py-2 w-1/2">
+            <td className="border border-black p-2 w-1/2">
               <p className="font-bold">Name and address of the Employer</p>
-              <p className="mt-2">{fy.schoolName}</p>
+              <p className="mt-1 h-12">{fy.schoolName}</p>
             </td>
-            <td className="border border-black px-4 py-2 w-1/2">
+            <td className="border border-black p-2 w-1/2">
               <p className="font-bold">Name and Designation of the Employee</p>
-              <p className="mt-2">{teacher.name}</p>
+              <p className="mt-1">{teacher.name}</p>
               <p>{teacher.designation}</p>
             </td>
           </tr>
           <tr>
-            <td className="border border-black px-4 py-2">
-              <p className="font-bold">PAN of the Deductor</p>
-              <p className="mt-1">{fy.hmPan || '........................'}</p>
+            <td className="border border-black p-2">
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <p className="font-bold">PAN of the Deductor</p>
+                  <p className="mt-1">{fy.hmPan || '........................'}</p>
+                </div>
+                <div>
+                  <p className="font-bold">TAN of the Deductor</p>
+                  <p className="mt-1">{fy.hmTan || '........................'}</p>
+                </div>
+              </div>
             </td>
-            <td className="border border-black px-4 py-2">
-              <p className="font-bold">TAN of the Deductor</p>
-              <p className="mt-1">{fy.hmTan || '........................'}</p>
-            </td>
-          </tr>
-          <tr>
-            <td className="border border-black px-4 py-2">
+            <td className="border border-black p-2">
               <p className="font-bold">PAN of the Employee</p>
               <p className="mt-1">{teacher.panNumber}</p>
             </td>
-            <td className="border border-black px-4 py-2">
-              <div className="flex justify-between">
+          </tr>
+          <tr>
+            <td className="border border-black p-2">
+              <p className="font-bold">CIT (TDS)</p>
+              <p className="mt-1">................................................</p>
+            </td>
+            <td className="border border-black p-2">
+              <div className="grid grid-cols-3 gap-2">
                 <div>
                   <p className="font-bold">Assessment Year</p>
                   <p className="mt-1">2026 - 27</p>
                 </div>
-                <div>
-                  <p className="font-bold">Period</p>
-                  <p className="mt-1">April-2025 to March-2026</p>
+                <div className="col-span-2">
+                  <p className="font-bold text-center">Period</p>
+                  <div className="grid grid-cols-2 text-center mt-1">
+                    <div>
+                      <p className="font-bold">From</p>
+                      <p>April-2025</p>
+                    </div>
+                    <div>
+                      <p className="font-bold">To</p>
+                      <p>March-2026</p>
+                    </div>
+                  </div>
                 </div>
               </div>
             </td>
@@ -335,96 +514,222 @@ export default function TaxStatementPrint({ mode, teacher, fy, monthlyData, taxC
         </tbody>
       </table>
 
-      <h3 className="font-bold mb-4 underline">Details of Salary paid and any other income and tax deducted</h3>
-      <table className="w-full border-collapse border border-black text-xs mb-8">
-        <thead>
-          <tr className="bg-gray-100">
-            <th className="border border-black px-2 py-2 text-left">Particulars</th>
-            <th className="border border-black px-2 py-2 w-32">Amount (Rs.)</th>
-            <th className="border border-black px-2 py-2 w-32">Total (Rs.)</th>
-          </tr>
-        </thead>
+      <h3 className="font-bold mb-2 underline text-[13px]">Details of Salary paid and any other income and tax deducted</h3>
+      <table className="w-full border-collapse border border-black text-[11px] mb-6">
         <tbody>
           <tr>
-            <td className="border border-black px-2 py-2">1. Gross Salary</td>
-            <td className="border border-black px-2 py-2 text-right"></td>
-            <td className="border border-black px-2 py-2 text-right font-bold">{f(taxCalc.grossSalary)}</td>
+            <td className="border border-black p-1 font-bold" colSpan={2}>1. Gross Salary Rs.</td>
+            <td className="border border-black p-1 w-24"></td>
+            <td className="border border-black p-1 w-24"></td>
           </tr>
           <tr>
-            <td className="border border-black px-2 py-2">2. Allowance to the extent exempt u/s 10</td>
-            <td className="border border-black px-2 py-2 text-right"></td>
-            <td className="border border-black px-2 py-2 text-right">0.00</td>
+            <td className="border border-black p-1 pl-4" colSpan={2}>(a) Salary as per provisions contained in sec.17(1)</td>
+            <td className="border border-black p-1 text-right"></td>
+            <td className="border border-black p-1 text-right"></td>
           </tr>
           <tr>
-            <td className="border border-black px-2 py-2">3. Balance (1 - 2)</td>
-            <td className="border border-black px-2 py-2 text-right"></td>
-            <td className="border border-black px-2 py-2 text-right font-bold">{f(taxCalc.grossSalary)}</td>
+            <td className="border border-black p-1 pl-4" colSpan={2}>(b) Value of perquisites u/s 17(2) (as per Form No.12BA)</td>
+            <td className="border border-black p-1 text-right"></td>
+            <td className="border border-black p-1 text-right"></td>
           </tr>
           <tr>
-            <td className="border border-black px-2 py-2">4. Deductions (Standard Deduction, etc.)</td>
-            <td className="border border-black px-2 py-2 text-right"></td>
-            <td className="border border-black px-2 py-2 text-right font-bold">{f(taxCalc.standardDeduction)}</td>
+            <td className="border border-black p-1 pl-4" colSpan={2}>(c) Profits in lieu of salary under section 17(3) (as per Form No.12BA)</td>
+            <td className="border border-black p-1 text-right"></td>
+            <td className="border border-black p-1 text-right"></td>
+          </tr>
+          <tr className="font-bold">
+            <td className="border border-black p-1 pl-8" colSpan={2}>Total Rs.</td>
+            <td className="border border-black p-1 text-right"></td>
+            <td className="border border-black p-1 text-right">{f(taxCalc.grossSalary)}</td>
           </tr>
           <tr>
-            <td className="border border-black px-2 py-2">5. Income chargeable under the head Salaries (3-4)</td>
-            <td className="border border-black px-2 py-2 text-right"></td>
-            <td className="border border-black px-2 py-2 text-right font-bold">{f(taxCalc.incomeChargeableSalaries)}</td>
+            <td className="border border-black p-1 font-bold" colSpan={2}>2. Allowance to the extent exempt u/s 10</td>
+            <td className="border border-black p-1 text-right"></td>
+            <td className="border border-black p-1 text-right"></td>
           </tr>
           <tr>
-            <td className="border border-black px-2 py-2">6. Any other income reported by the employee</td>
-            <td className="border border-black px-2 py-2 text-right"></td>
-            <td className="border border-black px-2 py-2 text-right">0.00</td>
+            <td className="border border-black p-1 pl-4" colSpan={2}>a) House Rent Allowance</td>
+            <td className="border border-black p-1 text-right"></td>
+            <td className="border border-black p-1 text-right"></td>
           </tr>
           <tr>
-            <td className="border border-black px-2 py-2">7. Gross total income (5+6)</td>
-            <td className="border border-black px-2 py-2 text-right"></td>
-            <td className="border border-black px-2 py-2 text-right font-bold">{f(taxCalc.incomeChargeableSalaries)}</td>
+            <td className="border border-black p-1 pl-4" colSpan={2}>b) Other Allowances</td>
+            <td className="border border-black p-1 text-right"></td>
+            <td className="border border-black p-1 text-right"></td>
+          </tr>
+          <tr className="font-bold">
+            <td className="border border-black p-1 font-bold" colSpan={2}>3. Balance ( 1- 2)</td>
+            <td className="border border-black p-1 text-right"></td>
+            <td className="border border-black p-1 text-right">{f(taxCalc.grossSalary)}</td>
           </tr>
           <tr>
-            <td className="border border-black px-2 py-2">8. Deductions under Chapter VIA</td>
-            <td className="border border-black px-2 py-2 text-right"></td>
-            <td className="border border-black px-2 py-2 text-right font-bold">{f((taxCalc.section80C || 0) + (taxCalc.section80D || 0))}</td>
+            <td className="border border-black p-1 font-bold" colSpan={2}>4. Deductions</td>
+            <td className="border border-black p-1 text-right"></td>
+            <td className="border border-black p-1 text-right"></td>
           </tr>
           <tr>
-            <td className="border border-black px-2 py-2">9. Total Income (7 - 8)</td>
-            <td className="border border-black px-2 py-2 text-right"></td>
-            <td className="border border-black px-2 py-2 text-right font-bold">{f(taxCalc.taxableIncome)}</td>
+            <td className="border border-black p-1 pl-4" colSpan={2}>a) Standard Deduction</td>
+            <td className="border border-black p-1 text-right"></td>
+            <td className="border border-black p-1 text-right">{f(taxCalc.standardDeduction)}</td>
           </tr>
           <tr>
-            <td className="border border-black px-2 py-2">10. Tax on Total Income</td>
-            <td className="border border-black px-2 py-2 text-right"></td>
-            <td className="border border-black px-2 py-2 text-right font-bold">{f(taxCalc.taxOnTotal)}</td>
+            <td className="border border-black p-1 pl-4" colSpan={2}>b) Conveyance Allowance</td>
+            <td className="border border-black p-1 text-right"></td>
+            <td className="border border-black p-1 text-right"></td>
           </tr>
           <tr>
-            <td className="border border-black px-2 py-2">11. Health and Education Cess @ 4%</td>
-            <td className="border border-black px-2 py-2 text-right"></td>
-            <td className="border border-black px-2 py-2 text-right font-bold">{f(taxCalc.cess)}</td>
+            <td className="border border-black p-1 pl-4" colSpan={2}>c) Prof. Tax on Employment</td>
+            <td className="border border-black p-1 text-right"></td>
+            <td className="border border-black p-1 text-right"></td>
+          </tr>
+          <tr className="font-bold">
+            <td className="border border-black p-1 font-bold" colSpan={2}>5. Aggregate of 4(a), (b) and (c) Rs.</td>
+            <td className="border border-black p-1 text-right"></td>
+            <td className="border border-black p-1 text-right">{f(taxCalc.standardDeduction)}</td>
+          </tr>
+          <tr className="font-bold">
+            <td className="border border-black p-1 font-bold" colSpan={2}>6. Income chargeable under the head Salaries (3-5)</td>
+            <td className="border border-black p-1 text-right"></td>
+            <td className="border border-black p-1 text-right">{f(taxCalc.incomeChargeableSalaries)}</td>
           </tr>
           <tr>
-            <td className="border border-black px-2 py-2">12. Total Tax Payable (10 + 11)</td>
-            <td className="border border-black px-2 py-2 text-right"></td>
-            <td className="border border-black px-2 py-2 text-right font-bold">{f(taxCalc.totalTax)}</td>
+            <td className="border border-black p-1 font-bold" colSpan={2}>7. Deduct: interest on HBA</td>
+            <td className="border border-black p-1 text-right"></td>
+            <td className="border border-black p-1 text-right"></td>
+          </tr>
+          <tr>
+            <td className="border border-black p-1 font-bold" colSpan={2}>8. Add: Any other income reported by the employee</td>
+            <td className="border border-black p-1 text-right"></td>
+            <td className="border border-black p-1 text-right"></td>
+          </tr>
+          <tr className="font-bold">
+            <td className="border border-black p-1 font-bold" colSpan={2}>9. Gross total income (6-7+8)</td>
+            <td className="border border-black p-1 text-right"></td>
+            <td className="border border-black p-1 text-right">{f(taxCalc.incomeChargeableSalaries)}</td>
+          </tr>
+          <tr>
+            <td className="border border-black p-1 font-bold" colSpan={2}>10. Deductions under Chapter VIA</td>
+            <td className="border border-black p-1 text-center font-bold">Gross Amount</td>
+            <td className="border border-black p-1 text-center font-bold">Deductible Amount</td>
+          </tr>
+          <tr>
+            <td className="border border-black p-1" colSpan={2}>
+              <p className="font-bold">(A) Sections 80C, 80CCC and 80CCD</p>
+              <div className="pl-4 space-y-0.5 text-[10px]">
+                <p>Life Insurance premia of self, spouse or children</p>
+                <p>Purchase of NSC VIII issue</p>
+                <p>Contribution to GPF (Subscription, DA Arrear, Pay Revision Arrear, etc)</p>
+                <p>Contribution to SLI, GIS, FBS, GPAIS, etc (Total)</p>
+                <p>Term deposit with Scheduled Bank for a fixed period</p>
+                <p>Purchase of tax saving units of Mutual Fund or UTI</p>
+                <p>Tution fees for full-time education to any 2 children</p>
+                <p>Housing Loan Repayment (Principal)</p>
+                <p>Contribution to PPF account of Self, Spouse or Children</p>
+                <p>Five year Time Deposit in Post Office</p>
+                <p>Contribution to NPS (Max 10% of Basic+DA)</p>
+                <p>Payment to Annuity Plan of Pension fund like LIC</p>
+              </div>
+            </td>
+            <td className="border border-black p-1 text-right align-bottom"></td>
+            <td className="border border-black p-1 text-right align-bottom">{f(taxCalc.section80C || 0)}</td>
+          </tr>
+          <tr className="font-bold">
+            <td className="border border-black p-1" colSpan={2}>Total amount u/s 80C, 80CCC and 80 CCD is Rs.</td>
+            <td className="border border-black p-1 text-right"></td>
+            <td className="border border-black p-1 text-right">{f(taxCalc.section80C || 0)}</td>
+          </tr>
+          <tr>
+            <td className="border border-black p-1" colSpan={2}>
+              <p className="font-bold">(B) Other sections (e.g. 80E, 80G etc.) under Chapter VI-A</p>
+              <div className="pl-4 space-y-0.5 text-[10px]">
+                <p>Health Insurance - Mediclaim</p>
+                <p>Expense on treatment of mentally or physically handicapped dependents</p>
+                <p>Expenditure on medical treatment of the employee for specified deceases</p>
+                <p>Interest on Educational Loan for higher education</p>
+                <p>Donation to various charitable and other funds [FLOOD]</p>
+                <p>Deduction for person with disability</p>
+                <p>Interest paid for Electric Vehicle Loan</p>
+                <p>Interest income for SB, Fixed deposit, ...</p>
+                <p>Remaining Contribution to NPS (Max Rs.50,000)</p>
+                <p>NPS - Employer's Contribution</p>
+              </div>
+            </td>
+            <td className="border border-black p-1 text-right align-bottom"></td>
+            <td className="border border-black p-1 text-right align-bottom">{f(taxCalc.section80D || 0)}</td>
+          </tr>
+          <tr className="font-bold">
+            <td className="border border-black p-1 text-center" colSpan={2}>TOTAL</td>
+            <td className="border border-black p-1 text-right"></td>
+            <td className="border border-black p-1 text-right">{f((taxCalc.section80C || 0) + (taxCalc.section80D || 0))}</td>
+          </tr>
+          <tr className="font-bold">
+            <td className="border border-black p-1" colSpan={2}>11. Aggregate of deductible amount (10A + 10B)</td>
+            <td className="border border-black p-1 text-right"></td>
+            <td className="border border-black p-1 text-right">{f((taxCalc.section80C || 0) + (taxCalc.section80D || 0))}</td>
+          </tr>
+          <tr className="font-bold">
+            <td className="border border-black p-1" colSpan={2}>12. Total Income rounded off to nearest multiple of ten rupees ( 9 - 11 )</td>
+            <td className="border border-black p-1 text-right"></td>
+            <td className="border border-black p-1 text-right">{f(taxCalc.taxableIncome)}</td>
+          </tr>
+          <tr>
+            <td className="border border-black p-1" colSpan={2}>13. Tax on Total Income</td>
+            <td className="border border-black p-1 text-right"></td>
+            <td className="border border-black p-1 text-right">{f(taxCalc.taxOnTotal)}</td>
+          </tr>
+          <tr>
+            <td className="border border-black p-1" colSpan={2}>14. Less: Rebate for the Income upto 12 Lakhs u/s 87 A</td>
+            <td className="border border-black p-1 text-right"></td>
+            <td className="border border-black p-1 text-right">{f(taxCalc.marginalRelief || 0)}</td>
+          </tr>
+          <tr className="font-bold">
+            <td className="border border-black p-1" colSpan={2}>15. Income tax after Rebate ( 13 - 14 )</td>
+            <td className="border border-black p-1 text-right"></td>
+            <td className="border border-black p-1 text-right">{f(Math.max(0, n(taxCalc.taxOnTotal) - n(taxCalc.marginalRelief)))}</td>
+          </tr>
+          <tr>
+            <td className="border border-black p-1" colSpan={2}>16. Health and Education Cess [ @ 4% of (15) ]</td>
+            <td className="border border-black p-1 text-right"></td>
+            <td className="border border-black p-1 text-right">{f(taxCalc.cess)}</td>
+          </tr>
+          <tr className="font-bold">
+            <td className="border border-black p-1" colSpan={2}>17. Total Tax Payable ( 15 + 16 )</td>
+            <td className="border border-black p-1 text-right"></td>
+            <td className="border border-black p-1 text-right">{f(taxCalc.totalTax)}</td>
+          </tr>
+          <tr>
+            <td className="border border-black p-1" colSpan={2}>18. Less: Relief for arrears of salary u/s. 89(1)</td>
+            <td className="border border-black p-1 text-right"></td>
+            <td className="border border-black p-1 text-right"></td>
+          </tr>
+          <tr className="font-bold bg-gray-50">
+            <td className="border border-black p-1" colSpan={2}>19. Total Income Tax for the Year (17-18)</td>
+            <td className="border border-black p-1 text-right"></td>
+            <td className="border border-black p-1 text-right">{f(taxCalc.totalTax)}</td>
           </tr>
         </tbody>
       </table>
 
-      <div className="mt-12">
-        <p className="font-bold text-center underline mb-8">Verification</p>
-        <p className="text-justify leading-relaxed text-sm">
-          I, ........................................................................, son/daughter of ........................................................................ working in the capacity of ........................................................................ (designation) do hereby certify that the information given above is true, complete and correct and is based on the books of account, documents, TDS statements, and other available records.
+      <div className="mt-8">
+        <p className="font-bold text-center underline mb-6">Verification</p>
+        <p className="text-justify leading-relaxed text-[11px]">
+          I, <span className="font-bold border-b border-dotted border-black px-2">........................................................................</span>, son/daughter of <span className="border-b border-dotted border-black px-2">........................................................................</span> working in the capacity of <span className="font-bold border-b border-dotted border-black px-2">{teacher.designation}</span> (designation) do hereby certify that the information given above is true, complete and correct and is based on the books of account, documents, TDS statements, and other available records.
         </p>
-        <div className="mt-12 flex justify-between items-end">
-          <div className="space-y-2 text-sm">
+        <div className="mt-10 grid grid-cols-2 text-[12px]">
+          <div className="space-y-4">
             <p><span className="font-bold">Place:</span> {fy.place || '.........................'}</p>
             <p><span className="font-bold">Date:</span> {new Date().toLocaleDateString()}</p>
           </div>
           <div className="text-center">
-            <div className="border-t border-black w-64 pt-2">
-              <p className="font-bold text-xs">Signature of person responsible for deduction of tax</p>
-              <p className="text-xs mt-1">Full Name: {fy.hmName || '........................................................'}</p>
+            <div className="border-t border-black w-64 pt-2 ml-auto">
+              <p className="font-bold text-[10px]">Signature of person responsible for deduction of tax</p>
+              <p className="text-[10px] mt-1">Full Name: {fy.hmName || '........................................................'}</p>
             </div>
           </div>
         </div>
+      </div>
+      <div className="mt-12 text-[9px] text-gray-400">
+        -ecostatt.com-
       </div>
     </div>
   );

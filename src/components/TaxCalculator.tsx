@@ -4,10 +4,12 @@ import { collection, getDocs, doc, getDoc, query, where, limit, addDoc, updateDo
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, auth, storage } from '../firebase';
 import { Teacher, FinancialYear, MonthlyData, TaxStatement } from '../types';
-import { Save, Printer, User, Calendar, Calculator, AlertTriangle, AlertCircle, ChevronRight, ChevronLeft, CheckCircle, Upload, Loader2, X, Users } from 'lucide-react';
+import { Save, Printer, User, Calendar, Calculator, AlertTriangle, AlertCircle, ChevronRight, ChevronLeft, CheckCircle, Upload, Loader2, X, Users, Box } from 'lucide-react';
 import { cn, formatCurrency } from '../lib/utils';
 import { calculateTax, calculateCess } from '../lib/tax';
 import TaxStatementPrint from './TaxStatementPrint';
+import Tax3DVisualizer from './Tax3DVisualizer';
+import { AnimatePresence } from 'framer-motion';
 
 const MONTHS = [
   'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December', 'January', 'February'
@@ -44,6 +46,7 @@ export default function TaxCalculator({ isAdmin }: { isAdmin: boolean }) {
   const [printMode, setPrintMode] = useState<'Anticipatory' | 'Final' | '12BB' | 'Form16' | null>(null);
   const [showPrintOptions, setShowPrintOptions] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
+  const [show3DVisualizer, setShow3DVisualizer] = useState(false);
   const [importing, setImporting] = useState(false);
   const [importSearch, setImportSearch] = useState('');
   const [selectedForImport, setSelectedForImport] = useState<string[]>([]);
@@ -608,20 +611,14 @@ export default function TaxCalculator({ isAdmin }: { isAdmin: boolean }) {
                 Old Regime
               </button>
             </div>
-            <div className="flex bg-gray-100 p-1 rounded-lg">
-              <button 
-                onClick={() => setStatementType('Anticipatory')}
-                className={cn("px-4 py-1.5 rounded-md text-sm font-medium transition-all", statementType === 'Anticipatory' ? "bg-white text-blue-600 shadow-sm" : "text-gray-500 hover:text-gray-700")}
-              >
-                Anticipatory
-              </button>
-              <button 
-                onClick={() => setStatementType('Final')}
-                className={cn("px-4 py-1.5 rounded-md text-sm font-medium transition-all", statementType === 'Final' ? "bg-white text-blue-600 shadow-sm" : "text-gray-500 hover:text-gray-700")}
-              >
-                Final
-              </button>
-            </div>
+
+            <button 
+              onClick={() => setShow3DVisualizer(true)}
+              className="bg-emerald-600 text-white px-4 py-2 rounded-lg hover:bg-emerald-700 flex items-center space-x-2 text-sm font-medium transition-all shadow-sm hover:shadow-md"
+            >
+              <Box className="h-4 w-4" />
+              <span>3D/AR View</span>
+            </button>
 
             <button 
               onClick={handleSaveStatement} 
@@ -801,7 +798,7 @@ export default function TaxCalculator({ isAdmin }: { isAdmin: boolean }) {
                         <td className="px-3 py-3 text-right font-medium text-gray-900">
                           <input 
                             type="number" 
-                            value={m.basicPay} 
+                            value={m.basicPay || 0} 
                             disabled={isStatementConfirmed} 
                             onChange={e => handleBasicPayChange(idx, parseInt(e.target.value) || 0)} 
                             className="w-20 text-right bg-transparent border-b border-gray-200 focus:border-blue-500 outline-none disabled:opacity-50 font-bold" 
@@ -812,49 +809,49 @@ export default function TaxCalculator({ isAdmin }: { isAdmin: boolean }) {
                         <td className="px-3 py-3 text-right text-gray-600">{n(m.hra)}</td>
                         <td className="px-3 py-3 text-right font-bold text-blue-600">{n(m.basicPay) + n(m.da) + n(m.hra)}</td>
                         <td className="px-3 py-3 text-right">
-                          <input type="number" value={m.pf} disabled={isStatementConfirmed} onChange={e => {
+                          <input type="number" value={m.pf || 0} disabled={isStatementConfirmed} onChange={e => {
                             const newData = [...monthlyData];
                             newData[idx].pf = parseInt(e.target.value) || 0;
                             setMonthlyData(newData);
                           }} className="w-16 text-right bg-transparent border-b border-gray-200 focus:border-blue-500 outline-none disabled:opacity-50" />
                         </td>
                         <td className="px-3 py-3 text-right">
-                          <input type="number" value={m.gis} disabled={isStatementConfirmed} onChange={e => {
+                          <input type="number" value={m.gis || 0} disabled={isStatementConfirmed} onChange={e => {
                             const newData = [...monthlyData];
                             newData[idx].gis = parseInt(e.target.value) || 0;
                             setMonthlyData(newData);
                           }} className="w-12 text-right bg-transparent border-b border-gray-200 focus:border-blue-500 outline-none disabled:opacity-50" />
                         </td>
                         <td className="px-3 py-3 text-right">
-                          <input type="number" value={m.sli} disabled={isStatementConfirmed} onChange={e => {
+                          <input type="number" value={m.sli || 0} disabled={isStatementConfirmed} onChange={e => {
                             const newData = [...monthlyData];
                             newData[idx].sli = parseInt(e.target.value) || 0;
                             setMonthlyData(newData);
                           }} className="w-12 text-right bg-transparent border-b border-gray-200 focus:border-blue-500 outline-none disabled:opacity-50" />
                         </td>
                         <td className="px-3 py-3 text-right">
-                          <input type="number" value={m.lic} disabled={isStatementConfirmed} onChange={e => {
+                          <input type="number" value={m.lic || 0} disabled={isStatementConfirmed} onChange={e => {
                             const newData = [...monthlyData];
                             newData[idx].lic = parseInt(e.target.value) || 0;
                             setMonthlyData(newData);
                           }} className="w-12 text-right bg-transparent border-b border-gray-200 focus:border-blue-500 outline-none disabled:opacity-50" />
                         </td>
                         <td className="px-3 py-3 text-right">
-                          <input type="number" value={m.medisep} disabled={isStatementConfirmed} onChange={e => {
+                          <input type="number" value={m.medisep || 0} disabled={isStatementConfirmed} onChange={e => {
                             const newData = [...monthlyData];
                             newData[idx].medisep = parseInt(e.target.value) || 0;
                             setMonthlyData(newData);
                           }} className="w-12 text-right bg-transparent border-b border-gray-200 focus:border-blue-500 outline-none disabled:opacity-50" />
                         </td>
                         <td className="px-3 py-3 text-right">
-                          <input type="number" value={m.nps} disabled={isStatementConfirmed} onChange={e => {
+                          <input type="number" value={m.nps || 0} disabled={isStatementConfirmed} onChange={e => {
                             const newData = [...monthlyData];
                             newData[idx].nps = parseInt(e.target.value) || 0;
                             setMonthlyData(newData);
                           }} className="w-16 text-right bg-transparent border-b border-gray-200 focus:border-blue-500 outline-none disabled:opacity-50" />
                         </td>
                         <td className="px-3 py-3 text-right">
-                          <input type="number" value={m.tds} disabled={isStatementConfirmed} onChange={e => {
+                          <input type="number" value={m.tds || 0} disabled={isStatementConfirmed} onChange={e => {
                             const newData = [...monthlyData];
                             newData[idx].tds = parseInt(e.target.value) || 0;
                             setMonthlyData(newData);
@@ -898,19 +895,19 @@ export default function TaxCalculator({ isAdmin }: { isAdmin: boolean }) {
                     </div>
                     <div className="flex justify-between items-center text-sm">
                       <span className="text-gray-600">Festival Allowance / Bonus</span>
-                      <input type="number" value={festivalAllowance} disabled={isStatementConfirmed} onChange={e => setFestivalAllowance(parseInt(e.target.value) || 0)} className="w-24 text-right border-b border-gray-200 outline-none focus:border-blue-500 disabled:opacity-50" />
+                      <input type="number" value={festivalAllowance || 0} disabled={isStatementConfirmed} onChange={e => setFestivalAllowance(parseInt(e.target.value) || 0)} className="w-24 text-right border-b border-gray-200 outline-none focus:border-blue-500 disabled:opacity-50" />
                     </div>
                     <div className="flex justify-between items-center text-sm">
                       <span className="text-gray-600">DA Arrear</span>
-                      <input type="number" value={daArrear} disabled={isStatementConfirmed} onChange={e => setDaArrear(parseInt(e.target.value) || 0)} className="w-24 text-right border-b border-gray-200 outline-none focus:border-blue-500 disabled:opacity-50" />
+                      <input type="number" value={daArrear || 0} disabled={isStatementConfirmed} onChange={e => setDaArrear(parseInt(e.target.value) || 0)} className="w-24 text-right border-b border-gray-200 outline-none focus:border-blue-500 disabled:opacity-50" />
                     </div>
                     <div className="flex justify-between items-center text-sm">
                       <span className="text-gray-600">Pay Revision Arrear</span>
-                      <input type="number" value={payRevisionArrear} disabled={isStatementConfirmed} onChange={e => setPayRevisionArrear(parseInt(e.target.value) || 0)} className="w-24 text-right border-b border-gray-200 outline-none focus:border-blue-500 disabled:opacity-50" />
+                      <input type="number" value={payRevisionArrear || 0} disabled={isStatementConfirmed} onChange={e => setPayRevisionArrear(parseInt(e.target.value) || 0)} className="w-24 text-right border-b border-gray-200 outline-none focus:border-blue-500 disabled:opacity-50" />
                     </div>
                     <div className="flex justify-between items-center text-sm">
                       <span className="text-gray-600">Other Income</span>
-                      <input type="number" value={otherIncome} disabled={isStatementConfirmed} onChange={e => setOtherIncome(parseInt(e.target.value) || 0)} className="w-24 text-right border-b border-gray-200 outline-none focus:border-blue-500 disabled:opacity-50" />
+                      <input type="number" value={otherIncome || 0} disabled={isStatementConfirmed} onChange={e => setOtherIncome(parseInt(e.target.value) || 0)} className="w-24 text-right border-b border-gray-200 outline-none focus:border-blue-500 disabled:opacity-50" />
                     </div>
                     <div className="flex justify-between items-center text-sm pt-2 border-t font-bold">
                       <span className="text-gray-900">Total Gross Income</span>
@@ -990,9 +987,18 @@ export default function TaxCalculator({ isAdmin }: { isAdmin: boolean }) {
                 </div>
                 <div className="flex justify-between items-center text-xl pt-4 border-t font-black">
                   <span className="text-gray-900">Balance Tax Due</span>
-                  <span className={cn("px-4 py-1 rounded-lg", (taxCalc?.balance || 0) > 0 ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700")}>
-                    {formatCurrency(taxCalc?.balance || 0)}
-                  </span>
+                  <div className="flex items-center space-x-3">
+                    <button 
+                      onClick={() => setShow3DVisualizer(true)}
+                      className="p-2 bg-emerald-100 text-emerald-700 rounded-lg hover:bg-emerald-200 transition-colors"
+                      title="Visualize in 3D/AR"
+                    >
+                      <Box className="h-5 w-5" />
+                    </button>
+                    <span className={cn("px-4 py-1 rounded-lg", (taxCalc?.balance || 0) > 0 ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700")}>
+                      {formatCurrency(taxCalc?.balance || 0)}
+                    </span>
+                  </div>
                 </div>
               </div>
             </section>
@@ -1148,6 +1154,26 @@ export default function TaxCalculator({ isAdmin }: { isAdmin: boolean }) {
           onClose={() => setPrintMode(null)}
         />
       )}
+
+      <AnimatePresence>
+        {show3DVisualizer && (
+          <Tax3DVisualizer 
+            data={{
+              grossSalary: taxCalc.grossSalary,
+              taxableIncome: taxCalc.taxableIncome,
+              totalTax: taxCalc.totalTax,
+              deductions: taxCalc.deductions,
+              standardDeduction: taxCalc.standardDeduction,
+              section80C: taxCalc.section80C,
+              section80D: taxCalc.section80D
+            }}
+            activeFY={activeFY}
+            regime={regime}
+            monthlyData={monthlyData}
+            onClose={() => setShow3DVisualizer(false)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

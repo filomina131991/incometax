@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { doc, getDoc, setDoc, addDoc, collection, updateDoc } from 'firebase/firestore';
 import { db, auth } from '../firebase';
 import { Teacher } from '../types';
-import { Save, ArrowLeft, Calendar, User, Briefcase, CreditCard, Lock, Calculator } from 'lucide-react';
+import { Save, ArrowLeft, Calendar, User, Briefcase, CreditCard, Lock, Calculator, Upload, X } from 'lucide-react';
 import { calculateRetirementDate, calculateExperience } from '../lib/retirement';
 import { format, parseISO } from 'date-fns';
 
@@ -21,6 +21,8 @@ export default function TeacherProfile({ isAdmin }: { isAdmin: boolean }) {
     pfNumber: '',
     designation: 'LPST',
     subject: '',
+    mobile: '',
+    email: '',
     bankAccountNumber: '',
     branch: '',
     ifscCode: '',
@@ -31,7 +33,19 @@ export default function TeacherProfile({ isAdmin }: { isAdmin: boolean }) {
     taxRegime: 'New',
     category: 'Below 60',
     basicPay: 0,
+    signatureUrl: '',
   });
+
+  const handleSignatureUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setTeacher({ ...teacher, signatureUrl: reader.result as string });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   useEffect(() => {
     if (id && id !== 'new') {
@@ -134,7 +148,7 @@ export default function TeacherProfile({ isAdmin }: { isAdmin: boolean }) {
               <label className="block text-xs font-medium text-gray-500 uppercase mb-1">Full Name</label>
               <input
                 type="text"
-                value={teacher.name}
+                value={teacher.name || ''}
                 onChange={e => setTeacher({ ...teacher, name: e.target.value })}
                 className="w-full border border-gray-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500"
               />
@@ -144,7 +158,7 @@ export default function TeacherProfile({ isAdmin }: { isAdmin: boolean }) {
                 <label className="block text-xs font-medium text-gray-500 uppercase mb-1">PEN Number</label>
                 <input
                   type="text"
-                  value={teacher.penNumber}
+                  value={teacher.penNumber || ''}
                   onChange={e => setTeacher({ ...teacher, penNumber: e.target.value })}
                   className="w-full border border-gray-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500 font-mono"
                 />
@@ -163,10 +177,30 @@ export default function TeacherProfile({ isAdmin }: { isAdmin: boolean }) {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
+                <label className="block text-xs font-medium text-gray-500 uppercase mb-1">Mobile Number</label>
+                <input
+                  type="tel"
+                  value={teacher.mobile || ''}
+                  onChange={e => setTeacher({ ...teacher, mobile: e.target.value })}
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-500 uppercase mb-1">Email Address</label>
+                <input
+                  type="email"
+                  value={teacher.email || ''}
+                  onChange={e => setTeacher({ ...teacher, email: e.target.value })}
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
                 <label className="block text-xs font-medium text-gray-500 uppercase mb-1">PAN Number</label>
                 <input
                   type="text"
-                  value={teacher.panNumber}
+                  value={teacher.panNumber || ''}
                   onChange={e => setTeacher({ ...teacher, panNumber: e.target.value.toUpperCase() })}
                   className="w-full border border-gray-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500 font-mono"
                 />
@@ -175,10 +209,34 @@ export default function TeacherProfile({ isAdmin }: { isAdmin: boolean }) {
                 <label className="block text-xs font-medium text-gray-500 uppercase mb-1">Aadhaar Number</label>
                 <input
                   type="text"
-                  value={teacher.aadhaarNumber}
+                  value={teacher.aadhaarNumber || ''}
                   onChange={e => setTeacher({ ...teacher, aadhaarNumber: e.target.value })}
                   className="w-full border border-gray-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500 font-mono"
                 />
+              </div>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-500 uppercase mb-1">Signature Image</label>
+              <div className="flex items-center space-x-4">
+                {teacher.signatureUrl ? (
+                  <div className="relative">
+                    <img src={teacher.signatureUrl} alt="Signature" className="h-12 border border-gray-200 rounded p-1" referrerPolicy="no-referrer" />
+                    <button
+                      onClick={() => setTeacher({ ...teacher, signatureUrl: '' })}
+                      className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-0.5 hover:bg-red-600"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                ) : (
+                  <label className="flex items-center justify-center w-full h-12 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-500 hover:bg-blue-50">
+                    <div className="flex items-center space-x-2 text-gray-500">
+                      <Upload className="h-4 w-4" />
+                      <span className="text-sm">Upload Signature</span>
+                    </div>
+                    <input type="file" className="hidden" accept="image/*" onChange={handleSignatureUpload} />
+                  </label>
+                )}
               </div>
             </div>
           </div>
@@ -203,13 +261,14 @@ export default function TeacherProfile({ isAdmin }: { isAdmin: boolean }) {
                   <option value="LPST">LPST</option>
                   <option value="UPST">UPST</option>
                   <option value="HST">HST</option>
+                  <option value="VHSE">VHSE</option>
                 </select>
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-500 uppercase mb-1">Subject</label>
                 <input
                   type="text"
-                  value={teacher.subject}
+                  value={teacher.subject || ''}
                   onChange={e => setTeacher({ ...teacher, subject: e.target.value })}
                   className="w-full border border-gray-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500"
                 />
@@ -219,7 +278,7 @@ export default function TeacherProfile({ isAdmin }: { isAdmin: boolean }) {
               <label className="block text-xs font-medium text-gray-500 uppercase mb-1">PF Number</label>
               <input
                 type="text"
-                value={teacher.pfNumber}
+                value={teacher.pfNumber || ''}
                 onChange={e => setTeacher({ ...teacher, pfNumber: e.target.value })}
                 className="w-full border border-gray-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500 font-mono"
               />
@@ -252,7 +311,7 @@ export default function TeacherProfile({ isAdmin }: { isAdmin: boolean }) {
               <label className="block text-xs font-medium text-gray-500 uppercase mb-1">Current Basic Pay (₹)</label>
               <input
                 type="number"
-                value={teacher.basicPay}
+                value={teacher.basicPay || 0}
                 onChange={e => setTeacher({ ...teacher, basicPay: parseInt(e.target.value) || 0 })}
                 className="w-full border border-gray-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500 font-bold text-lg"
               />
@@ -273,7 +332,7 @@ export default function TeacherProfile({ isAdmin }: { isAdmin: boolean }) {
                 <label className="block text-xs font-medium text-gray-500 uppercase mb-1">Date of Birth</label>
                 <input
                   type="date"
-                  value={teacher.dob}
+                  value={teacher.dob || ''}
                   onChange={e => handleDateChange('dob', e.target.value)}
                   className="w-full border border-gray-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500"
                 />
@@ -282,7 +341,7 @@ export default function TeacherProfile({ isAdmin }: { isAdmin: boolean }) {
                 <label className="block text-xs font-medium text-gray-500 uppercase mb-1">Date of Joining</label>
                 <input
                   type="date"
-                  value={teacher.doj}
+                  value={teacher.doj || ''}
                   onChange={e => handleDateChange('doj', e.target.value)}
                   className="w-full border border-gray-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500"
                 />
@@ -313,7 +372,7 @@ export default function TeacherProfile({ isAdmin }: { isAdmin: boolean }) {
               <label className="block text-xs font-medium text-gray-500 uppercase mb-1">Bank Account Number</label>
               <input
                 type="text"
-                value={teacher.bankAccountNumber}
+                value={teacher.bankAccountNumber || ''}
                 onChange={e => setTeacher({ ...teacher, bankAccountNumber: e.target.value })}
                 className="w-full border border-gray-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500 font-mono"
               />
@@ -323,7 +382,7 @@ export default function TeacherProfile({ isAdmin }: { isAdmin: boolean }) {
                 <label className="block text-xs font-medium text-gray-500 uppercase mb-1">Branch</label>
                 <input
                   type="text"
-                  value={teacher.branch}
+                  value={teacher.branch || ''}
                   onChange={e => setTeacher({ ...teacher, branch: e.target.value })}
                   className="w-full border border-gray-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500"
                 />
@@ -332,7 +391,7 @@ export default function TeacherProfile({ isAdmin }: { isAdmin: boolean }) {
                 <label className="block text-xs font-medium text-gray-500 uppercase mb-1">IFSC Code</label>
                 <input
                   type="text"
-                  value={teacher.ifscCode}
+                  value={teacher.ifscCode || ''}
                   onChange={e => setTeacher({ ...teacher, ifscCode: e.target.value.toUpperCase() })}
                   className="w-full border border-gray-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500 font-mono"
                 />
@@ -388,7 +447,7 @@ export default function TeacherProfile({ isAdmin }: { isAdmin: boolean }) {
               <label className="block text-xs font-medium text-gray-500 uppercase mb-1">Election ID</label>
               <input
                 type="text"
-                value={teacher.electionId}
+                value={teacher.electionId || ''}
                 onChange={e => setTeacher({ ...teacher, electionId: e.target.value })}
                 className="w-full border border-gray-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500"
               />

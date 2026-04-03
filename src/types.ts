@@ -54,8 +54,10 @@ export interface Teacher {
   panNumber: string;
   aadhaarNumber: string;
   pfNumber: string;
-  designation: 'LPST' | 'UPST' | 'HST';
+  designation: 'LPST' | 'UPST' | 'HST' | 'VHSE';
   subject: string;
+  mobile?: string;
+  email?: string;
   bankAccountNumber: string;
   branch: string;
   ifscCode: string;
@@ -66,6 +68,7 @@ export interface Teacher {
   taxRegime: 'New' | 'Old';
   category: 'Below 60' | 'Above 60' | 'Senior Citizen';
   password?: string;
+  signatureUrl?: string;
   basicPay: number;
   incrementMonth?: string;
   incrementAmount?: number;

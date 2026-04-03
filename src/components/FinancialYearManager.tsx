@@ -512,7 +512,7 @@ export default function FinancialYearManager() {
                         <span className="text-[10px] text-gray-500 block">Min</span>
                         <input
                           type="number"
-                          value={slab.min}
+                          value={slab.min || 0}
                           onChange={e => {
                             const newSlabs = [...(editingFy?.newRegimeSlabs || DEFAULT_SLABS)];
                             newSlabs[idx].min = parseInt(e.target.value) || 0;
@@ -525,7 +525,7 @@ export default function FinancialYearManager() {
                         <span className="text-[10px] text-gray-500 block">Max</span>
                         <input
                           type="number"
-                          value={slab.max || ''}
+                          value={slab.max === null ? '' : slab.max}
                           placeholder="Inf"
                           onChange={e => {
                             const newSlabs = [...(editingFy?.newRegimeSlabs || DEFAULT_SLABS)];
@@ -539,7 +539,7 @@ export default function FinancialYearManager() {
                         <span className="text-[10px] text-gray-500 block">Rate %</span>
                         <input
                           type="number"
-                          value={slab.rate}
+                          value={slab.rate || 0}
                           onChange={e => {
                             const newSlabs = [...(editingFy?.newRegimeSlabs || DEFAULT_SLABS)];
                             newSlabs[idx].rate = parseFloat(e.target.value) || 0;
@@ -562,7 +562,7 @@ export default function FinancialYearManager() {
                         <span className="text-[10px] text-gray-500 block">Min</span>
                         <input
                           type="number"
-                          value={slab.min}
+                          value={slab.min || 0}
                           onChange={e => {
                             const newSlabs = [...(editingFy?.oldRegimeSlabs || DEFAULT_OLD_SLABS)];
                             newSlabs[idx].min = parseInt(e.target.value) || 0;
@@ -575,7 +575,7 @@ export default function FinancialYearManager() {
                         <span className="text-[10px] text-gray-500 block">Max</span>
                         <input
                           type="number"
-                          value={slab.max || ''}
+                          value={slab.max === null ? '' : slab.max}
                           placeholder="Inf"
                           onChange={e => {
                             const newSlabs = [...(editingFy?.oldRegimeSlabs || DEFAULT_OLD_SLABS)];
@@ -589,7 +589,7 @@ export default function FinancialYearManager() {
                         <span className="text-[10px] text-gray-500 block">Rate %</span>
                         <input
                           type="number"
-                          value={slab.rate}
+                          value={slab.rate || 0}
                           onChange={e => {
                             const newSlabs = [...(editingFy?.oldRegimeSlabs || DEFAULT_OLD_SLABS)];
                             newSlabs[idx].rate = parseFloat(e.target.value) || 0;
