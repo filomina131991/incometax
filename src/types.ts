@@ -50,6 +50,7 @@ export interface Teacher {
   id?: string;
   name: string;
   penNumber: string;
+  fatherName?: string;
   gender: 'Male' | 'Female';
   panNumber: string;
   aadhaarNumber: string;

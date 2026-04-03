@@ -263,7 +263,7 @@ export default function TaxStatementPrint({ mode, teacher, fy, monthlyData, taxC
 
         <div className="mt-12 grid grid-cols-2 text-sm">
           <div className="space-y-4">
-            <p><span className="font-bold">Place:</span> {fy.place || ''}</p>
+            <p><span className="font-bold">Place:</span> Parisakkal</p>
             <p><span className="font-bold">Date:</span> {new Date().toLocaleDateString()}</p>
           </div>
           <div className="text-right flex flex-col items-end">
@@ -424,11 +424,11 @@ export default function TaxStatementPrint({ mode, teacher, fy, monthlyData, taxC
       <div className="mt-8">
         <p className="font-bold text-center underline mb-6">Verification</p>
         <p className="text-justify leading-relaxed text-[13px]">
-          I, <span className="font-bold border-b border-dotted border-black px-4">{teacher.name}</span>, son/daughter of <span className="border-b border-dotted border-black flex-1 inline-block min-w-[200px]">........................................................................</span> do hereby certify that the information given above is complete and correct.
+          I, <span className="font-bold border-b border-dotted border-black px-4">{teacher.name}</span>, son/daughter of <span className="font-bold border-b border-dotted border-black px-4">{teacher.fatherName || '........................................................................'}</span> do hereby certify that the information given above is complete and correct.
         </p>
         <div className="mt-10 grid grid-cols-2 text-[13px]">
           <div className="space-y-4">
-            <p><span className="font-bold">Place:</span> .........................</p>
+            <p><span className="font-bold">Place:</span> Parisakkal</p>
             <p><span className="font-bold">Date:</span> {new Date().toLocaleDateString()}</p>
           </div>
           <div className="text-right flex flex-col items-end">
@@ -713,11 +713,11 @@ export default function TaxStatementPrint({ mode, teacher, fy, monthlyData, taxC
       <div className="mt-8">
         <p className="font-bold text-center underline mb-6">Verification</p>
         <p className="text-justify leading-relaxed text-[11px]">
-          I, <span className="font-bold border-b border-dotted border-black px-2">........................................................................</span>, son/daughter of <span className="border-b border-dotted border-black px-2">........................................................................</span> working in the capacity of <span className="font-bold border-b border-dotted border-black px-2">{teacher.designation}</span> (designation) do hereby certify that the information given above is true, complete and correct and is based on the books of account, documents, TDS statements, and other available records.
+          I, <span className="font-bold border-b border-dotted border-black px-2">{teacher.name}</span>, son/daughter of <span className="font-bold border-b border-dotted border-black px-2">{teacher.fatherName || '........................................................................'}</span> working in the capacity of <span className="font-bold border-b border-dotted border-black px-2">{teacher.designation}</span> (designation) do hereby certify that the information given above is true, complete and correct and is based on the books of account, documents, TDS statements, and other available records.
         </p>
         <div className="mt-10 grid grid-cols-2 text-[12px]">
           <div className="space-y-4">
-            <p><span className="font-bold">Place:</span> {fy.place || '.........................'}</p>
+            <p><span className="font-bold">Place:</span> Parisakkal</p>
             <p><span className="font-bold">Date:</span> {new Date().toLocaleDateString()}</p>
           </div>
           <div className="text-center">
