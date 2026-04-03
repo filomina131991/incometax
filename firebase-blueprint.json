@@ -1,0 +1,170 @@
+{
+  "entities": {
+    "FinancialYear": {
+      "title": "Financial Year",
+      "description": "Configuration for a specific financial year including monthly DA, HRA, and tax slabs for both regimes.",
+      "type": "object",
+      "properties": {
+        "year": { "type": "string", "description": "e.g., 2025-26" },
+        "schoolName": { "type": "string" },
+        "monthlyConfig": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "month": { "type": "string" },
+              "daPercent": { "type": "number" },
+              "hraPercent": { "type": "number" }
+            }
+          }
+        },
+        "isActive": { "type": "boolean" },
+        "newRegimeSlabs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "min": { "type": "number" },
+              "max": { "type": "number" },
+              "rate": { "type": "number" }
+            }
+          }
+        },
+        "oldRegimeSlabs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "min": { "type": "number" },
+              "max": { "type": "number" },
+              "rate": { "type": "number" }
+            }
+          }
+        },
+        "standardDeduction": { "type": "number" },
+        "standardDeductionOld": { "type": "number" },
+        "rebateLimit": { "type": "number" },
+        "rebateAmount": { "type": "number" },
+        "rebateLimitOld": { "type": "number" },
+        "rebateAmountOld": { "type": "number" }
+      },
+      "required": ["year", "schoolName", "isActive"]
+    },
+    "Teacher": {
+      "title": "Teacher Profile",
+      "description": "Profile information for a teacher.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "penNumber": { "type": "string" },
+        "gender": { "type": "string", "enum": ["Male", "Female"] },
+        "panNumber": { "type": "string" },
+        "aadhaarNumber": { "type": "string" },
+        "pfNumber": { "type": "string" },
+        "designation": { "type": "string", "enum": ["LPST", "UPST", "HST"] },
+        "subject": { "type": "string" },
+        "bankAccountNumber": { "type": "string" },
+        "branch": { "type": "string" },
+        "ifscCode": { "type": "string" },
+        "electionId": { "type": "string" },
+        "dob": { "type": "string", "format": "date" },
+        "doj": { "type": "string", "format": "date" },
+        "dor": { "type": "string", "format": "date" },
+        "taxRegime": { "type": "string", "enum": ["New", "Old"] },
+        "category": { "type": "string", "enum": ["Below 60", "Above 60", "Senior Citizen"] },
+        "password": { "type": "string" },
+        "basicPay": { "type": "number" }
+      },
+      "required": ["name", "penNumber", "dob", "doj"]
+    },
+    "TaxStatement": {
+      "title": "Tax Statement",
+      "description": "Income tax calculation statement (Anticipatory or Final).",
+      "type": "object",
+      "properties": {
+        "teacherId": { "type": "string" },
+        "financialYearId": { "type": "string" },
+        "type": { "type": "string", "enum": ["Anticipatory", "Final"] },
+        "monthlyData": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "month": { "type": "string" },
+              "basicPay": { "type": "number" },
+              "da": { "type": "number" },
+              "hra": { "type": "number" },
+              "ca": { "type": "number" },
+              "otherAllowance": { "type": "number" },
+              "pf": { "type": "number" },
+              "gis": { "type": "number" },
+              "sli": { "type": "number" },
+              "lic": { "type": "number" },
+              "medisep": { "type": "number" },
+              "gpais": { "type": "number" },
+              "nps": { "type": "number" }
+            }
+          }
+        },
+        "festivalAllowance": { "type": "number" },
+        "otherIncome": { "type": "number" },
+        "totalIncome": { "type": "number" },
+        "taxableIncome": { "type": "number" },
+        "taxOnTotalIncome": { "type": "number" },
+        "taxRebate": { "type": "number" },
+        "surcharge": { "type": "number" },
+        "cess": { "type": "number" },
+        "totalTaxPayable": { "type": "number" },
+        "taxDeducted": { "type": "number" },
+        "balanceTax": { "type": "number" }
+      },
+      "required": ["teacherId", "financialYearId", "type"]
+    },
+    "Activity": {
+      "title": "Recent Activity",
+      "description": "A log of recent actions performed in the system.",
+      "type": "object",
+      "properties": {
+        "type": { "type": "string", "enum": ["create", "update", "delete", "save", "confirm"] },
+        "description": { "type": "string" },
+        "userId": { "type": "string" },
+        "userName": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "details": { "type": "object" }
+      },
+      "required": ["type", "description", "userId", "userName", "timestamp"]
+    },
+    "User": {
+      "title": "User Profile",
+      "description": "User role and basic information.",
+      "type": "object",
+      "properties": {
+        "role": { "type": "string", "enum": ["admin", "teacher"] },
+        "email": { "type": "string", "format": "email" }
+      },
+      "required": ["role"]
+    }
+  },
+  "firestore": {
+    "/financialYears/{fyId}": {
+      "schema": "FinancialYear",
+      "description": "Collection of financial years."
+    },
+    "/teachers/{teacherId}": {
+      "schema": "Teacher",
+      "description": "Collection of teacher profiles."
+    },
+    "/taxStatements/{statementId}": {
+      "schema": "TaxStatement",
+      "description": "Collection of tax statements."
+    },
+    "/activities/{activityId}": {
+      "schema": "Activity",
+      "description": "Collection of recent activities."
+    },
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "Collection of user profiles and roles."
+    }
+  }
+}
