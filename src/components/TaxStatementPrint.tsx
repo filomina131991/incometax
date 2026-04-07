@@ -44,7 +44,7 @@ export default function TaxStatementPrint({ mode, teacher, fy, monthlyData, taxC
   const handlePrint = () => {
     if (isProcessing) return;
     setIsProcessing(true);
-    
+
     // Give React time to render the loading overlay first
     setTimeout(() => {
       try {
@@ -85,11 +85,12 @@ export default function TaxStatementPrint({ mode, teacher, fy, monthlyData, taxC
 
     return (
       <div className="p-1 px-3 text-black bg-white tamil-font-container" style={{ fontFamily: "'Times New Roman', Times, serif" }}>
-        <div className="text-center mb-0.5">
-          <h1 className="text-[12px] font-bold uppercase underline whitespace-nowrap overflow-hidden text-ellipsis block w-full px-2 leading-tight">
+        <div className="text-center mb-1">
+          <h1 className="text-[12px] font-bold uppercase underline whitespace-nowrap overflow-hidden text-ellipsis block w-full px-2 leading-tight mb-3">
             {isAnticipatory ? 'Anticipatory Income Tax Statement for the Financial Year' : 'Income Tax Statement for the Financial Year'} {fy.year}
           </h1>
-          <p className="text-[9px] font-bold leading-none">(Assessment Year {startYear + 1}-{String(endYear + 1).slice(-2)})</p>
+
+          <p className="text-[11px] font-bold leading-none mt-1">(Assessment Year {startYear + 1}-{String(endYear + 1).slice(-2)})</p>
         </div>
 
         <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-[9.5px] items-center mt-2 mb-2">
@@ -293,10 +294,10 @@ export default function TaxStatementPrint({ mode, teacher, fy, monthlyData, taxC
 
   const renderForm12BB = () => (
     <div className="p-2 px-8 text-black bg-white tamil-font-container" style={{ fontFamily: "'Times New Roman', Times, serif" }}>
-      <div className="text-center mb-0.5">
-        <h1 className="text-[12px] font-bold uppercase underline leading-tight">FORM NO. 12BB</h1>
-        <p className="text-[8px] font-bold leading-none">(See rule 26C)</p>
-        <p className="text-[10px] mt-0.5 font-bold leading-tight">Statement showing particulars of claims by an employee for deduction of tax under section 192</p>
+      <div className="text-center mb-2">
+        <h1 className="text-[12px] font-bold uppercase underline leading-tight mb-2">FORM NO. 12BB</h1>
+        <p className="text-[9px] font-bold leading-none">(See rule 26C)</p>
+        <p className="text-[11px] mt-1 font-bold leading-tight uppercase">Statement showing particulars of claims by an employee for deduction of tax under section 192</p>
       </div>
 
       <div className="space-y-2 text-[10px] border border-black p-2 px-4 rounded-sm bg-gray-50/50 mb-4">
@@ -431,10 +432,10 @@ export default function TaxStatementPrint({ mode, teacher, fy, monthlyData, taxC
 
   const renderForm16 = () => (
     <div className="p-1 px-3 text-black bg-white tamil-font-container" style={{ fontFamily: "'Times New Roman', Times, serif" }}>
-      <div className="text-center mb-0.5">
-        <h1 className="text-[12px] font-bold uppercase underline leading-tight">FORM NO. 16</h1>
-        <p className="text-[8px] font-bold leading-none">[See rule 31(1)(a)]</p>
-        <p className="text-[10px] font-bold mt-0.5">PART B (Annexure)</p>
+      <div className="text-center mb-2">
+        <h1 className="text-[13px] font-bold uppercase underline leading-tight mb-2">FORM NO. 16</h1>
+        <p className="text-[9px] font-bold leading-none">[See rule 31(1)(a)]</p>
+        <p className="text-[11px] font-bold mt-1 uppercase">PART B (Annexure)</p>
       </div>
 
       <table className="w-full border-collapse border border-black text-[8px] mb-1">
@@ -761,13 +762,12 @@ export default function TaxStatementPrint({ mode, teacher, fy, monthlyData, taxC
 
         {/* Scrollable Report Area */}
         <div id="printable-report" className="flex-1 overflow-auto p-4 md:p-8 bg-gray-100 print:bg-white print:p-0 print:overflow-visible print:block">
-          <div 
-            id="printable-area-actual" 
-            ref={printRef} 
-            className={`printable-area bg-white shadow-lg mx-auto print:shadow-none print:m-0 print:w-full print:block ${
-              (mode === 'Anticipatory' || mode === 'Final') ? 'anticipatory-final-mode' : 
+          <div
+            id="printable-area-actual"
+            ref={printRef}
+            className={`printable-area bg-white shadow-lg mx-auto print:shadow-none print:m-0 print:w-full print:block ${(mode === 'Anticipatory' || mode === 'Final') ? 'anticipatory-final-mode' :
               mode === '12BB' ? 'form-12bb-mode' : ''
-            }`}
+              }`}
           >
             {mode === '12BB' ? renderForm12BB() : mode === 'Form16' ? renderForm16() : renderAnticipatoryOrFinal()}
           </div>
