@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { collection, addDoc, updateDoc, deleteDoc, doc, getDocs, query, orderBy, where } from 'firebase/firestore';
-import { db, auth } from '../firebase';
+import { dbService, authService } from '../api';
 import { Teacher, FinancialYear } from '../types';
 import { Plus, Trash2, Edit2, Search, UserPlus, Eye, Calculator, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 import { calculateRetirementDate } from '../lib/retirement';
@@ -23,11 +22,8 @@ export default function TeacherManagement() {
 
   async function fetchActiveFY() {
     try {
-      const q = query(collection(db, 'financialYears'), where('isActive', '==', true));
-      const snapshot = await getDocs(q);
-      if (!snapshot.empty) {
-        setActiveFY({ id: snapshot.docs[0].id, ...snapshot.docs[0].data() } as FinancialYear);
-      }
+      const fy = await dbService.getActiveFY();
+      setActiveFY(fy);
     } catch (error) {
       console.error("Error fetching active FY:", error);
     }
@@ -36,9 +32,8 @@ export default function TeacherManagement() {
   async function fetchTeachers() {
     setLoading(true);
     try {
-      const q = query(collection(db, 'teachers'), orderBy('name', 'asc'));
-      const snapshot = await getDocs(q);
-      setTeachers(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Teacher)));
+      const data = await dbService.getAllTeachers();
+      setTeachers(data);
     } catch (error) {
       console.error("Error fetching teachers:", error);
     } finally {
@@ -62,14 +57,15 @@ export default function TeacherManagement() {
         deletedInFY.push(activeFY.id!);
       }
 
-      await updateDoc(doc(db, 'teachers', id), { deletedInFY });
+      await dbService.updateTeacher(id, { deletedInFY });
 
       // Log activity
-      await addDoc(collection(db, 'activities'), {
+      const user = authService.getCurrentUser();
+      await dbService.logActivity({
         type: 'delete',
         description: `Deleted teacher ${teacher.name} from FY ${activeFY.year}`,
-        userId: auth.currentUser?.uid,
-        userName: auth.currentUser?.displayName || 'Unknown User',
+        userId: user?.id,
+        userName: user?.name || 'Unknown User',
         timestamp: new Date().toISOString()
       });
 

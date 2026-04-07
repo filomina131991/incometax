@@ -1,12 +1,8 @@
 import { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, Navigate, useNavigate } from 'react-router-dom';
-import { onAuthStateChanged, User } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
-import { auth, db, signInWithGoogle, logout } from './firebase';
+import { authService } from './api';
 import { LogIn, LogOut, User as UserIcon, Settings, Calculator, Users, Home, Menu, X } from 'lucide-react';
 import { cn } from './lib/utils';
-
-// Components (to be created)
 import AdminDashboard from './components/AdminDashboard';
 import TeacherManagement from './components/TeacherManagement';
 import TeacherProfile from './components/TeacherProfile';
@@ -14,7 +10,7 @@ import TaxCalculator from './components/TaxCalculator';
 import FinancialYearManager from './components/FinancialYearManager';
 import ErrorBoundary from './components/ErrorBoundary';
 
-function Navbar({ user, isAdmin }: { user: User | null; isAdmin: boolean }) {
+function Navbar({ user, isAdmin }: { user: any; isAdmin: boolean }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navigate = useNavigate();
 
@@ -55,9 +51,13 @@ function Navbar({ user, isAdmin }: { user: User | null; isAdmin: boolean }) {
     </>
   );
 
+  const handleLogout = () => {
+    authService.logout();
+    window.location.href = '/login';
+  };
+
   return (
-    <header className="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
-      {/* Top Header */}
+    <header className="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm print:hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16 items-center">
             <div className="flex items-center">
@@ -76,20 +76,19 @@ function Navbar({ user, isAdmin }: { user: User | null; isAdmin: boolean }) {
             {user ? (
               <div className="flex items-center space-x-3">
                 <div className="flex flex-col items-end hidden sm:flex">
-                  <span className="text-sm font-bold text-gray-900">{user.displayName}</span>
+                  <span className="text-sm font-bold text-gray-900">{user.name}</span>
                   <span className="text-[10px] text-blue-600 font-bold uppercase tracking-wider">{isAdmin ? 'Administrator' : 'Teacher'}</span>
                 </div>
                 <div className="h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center border border-gray-200 hidden sm:flex">
                   <UserIcon className="h-4 w-4 text-gray-500" />
                 </div>
                 <button
-                  onClick={() => logout()}
+                  onClick={handleLogout}
                   className="p-2 text-gray-400 hover:text-red-600 transition-colors rounded-lg hover:bg-red-50 hidden sm:flex"
                   title="Logout"
                 >
                   <LogOut className="h-5 w-5" />
                 </button>
-                {/* Mobile Menu Toggle */}
                 <button
                   onClick={() => setIsMenuOpen(!isMenuOpen)}
                   className="md:hidden p-2 text-gray-500 hover:text-blue-600 transition-colors rounded-lg hover:bg-blue-50"
@@ -98,19 +97,18 @@ function Navbar({ user, isAdmin }: { user: User | null; isAdmin: boolean }) {
                 </button>
               </div>
             ) : (
-              <button
-                onClick={() => signInWithGoogle()}
-                className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-xl hover:bg-blue-700 transition-all shadow-sm hover:shadow-md font-medium text-sm"
+              <Link
+                to="/login"
+                className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-xl hover:bg-blue-700 transition-all font-medium text-sm"
               >
                 <LogIn className="h-4 w-4" />
                 <span>Login</span>
-              </button>
+              </Link>
             )}
           </div>
         </div>
       </div>
 
-      {/* Desktop Navigation Bar (Below Header) */}
       {user && (
         <div className="hidden md:block border-t border-gray-100 bg-gray-50/50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -121,7 +119,6 @@ function Navbar({ user, isAdmin }: { user: User | null; isAdmin: boolean }) {
         </div>
       )}
 
-      {/* Mobile Navigation Menu (Collapsible) */}
       {user && isMenuOpen && (
         <div className="md:hidden border-t border-gray-100 bg-white animate-in slide-in-from-top duration-200">
           <div className="px-4 pt-4 pb-6 space-y-4">
@@ -130,17 +127,14 @@ function Navbar({ user, isAdmin }: { user: User | null; isAdmin: boolean }) {
                 <UserIcon className="h-5 w-5 text-blue-600" />
               </div>
               <div className="flex flex-col">
-                <span className="text-sm font-bold text-gray-900">{user.displayName}</span>
+                <span className="text-sm font-bold text-gray-900">{user.name}</span>
                 <span className="text-[10px] text-blue-600 font-bold uppercase tracking-wider">{isAdmin ? 'Administrator' : 'Teacher'}</span>
               </div>
             </div>
             <div className="flex flex-col space-y-1">
               <NavLinks />
               <button
-                onClick={() => {
-                  setIsMenuOpen(false);
-                  logout();
-                }}
+                onClick={handleLogout}
                 className="text-red-600 hover:bg-red-50 px-3 py-2 rounded-md text-sm font-medium flex items-center transition-colors mt-2"
               >
                 <LogOut className="h-4 w-4 mr-2" /> Logout
@@ -154,25 +148,17 @@ function Navbar({ user, isAdmin }: { user: User | null; isAdmin: boolean }) {
 }
 
 export default function App() {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<any>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      setUser(user);
-      if (user) {
-        // Check if user is admin
-        const userDoc = await getDoc(doc(db, 'users', user.uid));
-        const userData = userDoc.data();
-        const isDefaultAdmin = user.email === 'filomina131991@gmail.com';
-        setIsAdmin(userData?.role === 'admin' || isDefaultAdmin);
-      } else {
-        setIsAdmin(false);
-      }
-      setLoading(false);
-    });
-    return unsubscribe;
+    const currentUser = authService.getCurrentUser();
+    if (currentUser) {
+      setUser(currentUser);
+      setIsAdmin(currentUser.role === 'admin' || currentUser.email === 'filomina131991@gmail.com');
+    }
+    setLoading(false);
   }, []);
 
   if (loading) {
@@ -192,18 +178,14 @@ export default function App() {
             <Routes>
               <Route path="/" element={user ? <AdminDashboard isAdmin={isAdmin} /> : <Navigate to="/login" />} />
               <Route path="/login" element={!user ? <LoginView /> : <Navigate to="/" />} />
-              
-              {/* Admin Routes */}
               <Route path="/admin/fy" element={isAdmin ? <FinancialYearManager /> : <Navigate to="/" />} />
               <Route path="/admin/teachers" element={isAdmin ? <TeacherManagement /> : <Navigate to="/" />} />
-              
-              {/* Common Routes */}
               <Route path="/teacher/:id" element={user ? <TeacherProfile isAdmin={isAdmin} /> : <Navigate to="/login" />} />
               <Route path="/calculate" element={user ? <TaxCalculator isAdmin={isAdmin} /> : <Navigate to="/login" />} />
               <Route path="/calculate/:teacherId" element={user ? <TaxCalculator isAdmin={isAdmin} /> : <Navigate to="/login" />} />
             </Routes>
           </main>
-          <footer className="bg-white border-t border-gray-200 py-6">
+          <footer className="bg-white border-t border-gray-200 py-6 print:hidden">
             <div className="max-w-7xl mx-auto px-4 text-center text-gray-500 text-sm">
               &copy; {new Date().getFullYear()} School Income Tax Manager. All rights reserved.
             </div>
@@ -215,19 +197,53 @@ export default function App() {
 }
 
 function LoginView() {
+  const [email, setEmail] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  // Default credentials for easier testing during migration
+  const handleQuickLogin = async (type: 'admin' | 'teacher') => {
+    setLoading(true);
+    try {
+      const email = type === 'admin' ? 'filomina131991@gmail.com' : 'teacher@example.com';
+      await authService.login(email, type === 'admin' ? 'Admin' : 'Teacher');
+      window.location.href = '/';
+    } catch (err) {
+      alert("Login failed: " + (err as Error).message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="flex flex-col items-center justify-center py-12">
       <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-200 max-w-md w-full text-center">
         <Calculator className="h-16 w-16 text-blue-600 mx-auto mb-6" />
         <h1 className="text-2xl font-bold text-gray-900 mb-2">Welcome Back</h1>
-        <p className="text-gray-600 mb-8">Please login to access the School Income Tax Management system.</p>
-        <button
-          onClick={() => signInWithGoogle()}
-          className="w-full flex items-center justify-center space-x-3 bg-white border border-gray-300 text-gray-700 px-4 py-3 rounded-xl hover:bg-gray-50 transition-all font-medium"
-        >
-          <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" className="h-5 w-5" alt="Google" />
-          <span>Continue with Google</span>
-        </button>
+        <p className="text-gray-600 mb-8">Please login to access the system.</p>
+        
+        <div className="space-y-4">
+          <button
+            onClick={() => handleQuickLogin('admin')}
+            disabled={loading}
+            className="w-full flex items-center justify-center space-x-3 bg-blue-600 text-white px-4 py-3 rounded-xl hover:bg-blue-700 transition-all font-medium"
+          >
+            <UserIcon className="h-5 w-5 font-bold" />
+            <span>Login as Administrator</span>
+          </button>
+          
+          <button
+            onClick={() => handleQuickLogin('teacher')}
+            disabled={loading}
+            className="w-full flex items-center justify-center space-x-3 bg-white border border-gray-300 text-gray-700 px-4 py-3 rounded-xl hover:bg-gray-50 transition-all font-medium"
+          >
+            <Users className="h-5 w-5" />
+            <span>Login as Teacher</span>
+          </button>
+        </div>
+        
+        <p className="mt-8 text-xs text-gray-400">
+          This system is now connected to MongoDB. Your session will be managed locally.
+        </p>
       </div>
     </div>
   );

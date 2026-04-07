@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
-import { collection, addDoc, updateDoc, deleteDoc, doc, getDocs, query, orderBy, writeBatch } from 'firebase/firestore';
-import { db, auth } from '../firebase';
+import { dbService, authService } from '../api';
 import { FinancialYear, TaxSlab } from '../types';
 import { Plus, Trash2, Edit2, CheckCircle, XCircle, Save, AlertCircle } from 'lucide-react';
 import { cn } from '../lib/utils';
@@ -38,9 +37,8 @@ export default function FinancialYearManager() {
   async function fetchFys() {
     setLoading(true);
     try {
-      const q = query(collection(db, 'financialYears'), orderBy('year', 'desc'));
-      const snapshot = await getDocs(q);
-      setFys(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as FinancialYear)));
+      const data = await dbService.getFinancialYears();
+      setFys(data);
     } catch (error) {
       console.error("Error fetching FYs:", error);
     } finally {
@@ -55,6 +53,7 @@ export default function FinancialYearManager() {
     }
 
     try {
+      const user = authService.getCurrentUser();
       const dataToSave = {
         ...editingFy,
         isActive: editingFy.isActive || false,
@@ -71,27 +70,27 @@ export default function FinancialYearManager() {
       };
 
       if (editingFy.id) {
-        await updateDoc(doc(db, 'financialYears', editingFy.id), dataToSave);
+        await dbService.updateFinancialYear(editingFy.id, dataToSave);
         
         // Log activity
-        await addDoc(collection(db, 'activities'), {
+        await dbService.logActivity({
           type: 'update',
           description: `Updated financial year ${dataToSave.year}`,
-          userId: auth.currentUser?.uid,
-          userName: auth.currentUser?.displayName || 'Unknown User',
+          userId: user?.id,
+          userName: user?.name || 'Unknown User',
           timestamp: new Date().toISOString()
         });
 
         setNotification({ message: 'Financial Year updated successfully', type: 'success' });
       } else {
-        await addDoc(collection(db, 'financialYears'), dataToSave);
+        await dbService.addFinancialYear(dataToSave);
 
         // Log activity
-        await addDoc(collection(db, 'activities'), {
+        await dbService.logActivity({
           type: 'create',
           description: `Created financial year ${dataToSave.year}`,
-          userId: auth.currentUser?.uid,
-          userName: auth.currentUser?.displayName || 'Unknown User',
+          userId: user?.id,
+          userName: user?.name || 'Unknown User',
           timestamp: new Date().toISOString()
         });
 
@@ -109,18 +108,22 @@ export default function FinancialYearManager() {
   async function handleActivate(id: string) {
     if (!confirm("Are you sure you want to set this financial year as active?")) return;
     try {
-      const batch = writeBatch(db);
-      fys.forEach(fy => {
-        batch.update(doc(db, 'financialYears', fy.id!), { isActive: fy.id === id });
-      });
-      await batch.commit();
+      const user = authService.getCurrentUser();
+      // Implementation of activation (server-side would be better, but we'll do sequential updates if needed)
+      // Actually, let's assume updateFinancialYear handles the "deactivate others" if we send isActive: true?
+      // Or we can just do it here.
+      for (const fy of fys) {
+        if (fy.isActive || fy.id === id) {
+          await dbService.updateFinancialYear(fy.id!, { ...fy, isActive: fy.id === id });
+        }
+      }
 
       // Log activity
-      await addDoc(collection(db, 'activities'), {
+      await dbService.logActivity({
         type: 'update',
         description: `Activated financial year ${fys.find(f => f.id === id)?.year}`,
-        userId: auth.currentUser?.uid,
-        userName: auth.currentUser?.displayName || 'Unknown User',
+        userId: user?.id,
+        userName: user?.name || 'Unknown User',
         timestamp: new Date().toISOString()
       });
 
@@ -140,14 +143,15 @@ export default function FinancialYearManager() {
     }
     if (!confirm("Are you sure you want to delete this financial year? This action cannot be undone.")) return;
     try {
-      await deleteDoc(doc(db, 'financialYears', id));
+      const user = authService.getCurrentUser();
+      await dbService.deleteFinancialYear(id);
 
       // Log activity
-      await addDoc(collection(db, 'activities'), {
+      await dbService.logActivity({
         type: 'delete',
         description: `Deleted financial year ${fy?.year}`,
-        userId: auth.currentUser?.uid,
-        userName: auth.currentUser?.displayName || 'Unknown User',
+        userId: user?.id,
+        userName: user?.name || 'Unknown User',
         timestamp: new Date().toISOString()
       });
 

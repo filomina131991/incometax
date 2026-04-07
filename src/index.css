@@ -27,3 +27,89 @@
   }
 }
 
+
+@media print {
+  @page {
+    margin: 5mm;
+    size: A4;
+  }
+  
+  html, body {
+    background-color: white !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    height: auto !important;
+  }
+
+  /* Reset layout effects */
+  #root, .min-h-screen, main {
+    display: block !important;
+    height: auto !important;
+    min-height: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: visible !important;
+    position: static !important;
+    background: white !important;
+  }
+
+  /* Hide app common components */
+  header, nav, footer, button:not(.print-include), .print-hide, .preview-actions,
+  [class*="sticky"], [class*="fixed"]:not(.print-overlay),
+  aside {
+    display: none !important;
+  }
+
+  /* Ensure the printable area is visible and properly positioned */
+  .print-overlay {
+    position: static !important;
+    display: block !important;
+    background: white !important;
+    width: 100% !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    z-index: auto !important;
+    box-shadow: none !important;
+  }
+
+  #printable-container {
+    display: block !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    background: white !important;
+  }
+
+  .printable-area {
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+  }
+
+  /* Force table layouts and prevent weird breaks */
+  table { 
+    page-break-inside: auto; 
+    border-collapse: collapse !important;
+    width: 100% !important;
+  }
+  tr { 
+    page-break-inside: avoid !important; 
+    page-break-after: auto; 
+  }
+  thead { display: table-header-group; }
+  tfoot { display: table-footer-group; }
+  
+  /* Suppress scrollbars */
+  ::-webkit-scrollbar {
+    display: none !important;
+  }
+  * {
+    -ms-overflow-style: none !important;
+    scrollbar-width: none !important;
+  }
+}

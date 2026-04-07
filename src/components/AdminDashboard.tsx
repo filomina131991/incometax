@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { collection, query, where, getDocs, limit, orderBy } from 'firebase/firestore';
-import { db } from '../firebase';
+import { dbService } from '../api';
 import { FinancialYear, Teacher, TaxStatement } from '../types';
 import { Users, Settings, Calculator, PlusCircle, AlertCircle, Download, FileText, Printer, Clock } from 'lucide-react';
 import { formatCurrency } from '../lib/utils';
@@ -21,16 +20,11 @@ export default function AdminDashboard({ isAdmin }: { isAdmin: boolean }) {
   useEffect(() => {
     async function fetchData() {
       try {
-        // Get active FY
-        const fyQuery = query(collection(db, 'financialYears'), where('isActive', '==', true), limit(1));
-        const fySnapshot = await getDocs(fyQuery);
-        if (!fySnapshot.empty) {
-          setActiveFY({ id: fySnapshot.docs[0].id, ...fySnapshot.docs[0].data() } as FinancialYear);
-        }
+        const fy = await dbService.getActiveFY();
+        setActiveFY(fy);
 
-        // Get teacher count
-        const teachersSnapshot = await getDocs(collection(db, 'teachers'));
-        setTeacherCount(teachersSnapshot.size);
+        const teachers = await dbService.getAllTeachers();
+        setTeacherCount(teachers.length);
       } catch (error) {
         console.error("Error fetching dashboard data:", error);
       } finally {
@@ -44,23 +38,15 @@ export default function AdminDashboard({ isAdmin }: { isAdmin: boolean }) {
     if (!activeFY) return;
     setExporting(true);
     try {
-      const q = query(
-        collection(db, 'taxStatements'),
-        where('financialYearId', '==', activeFY.id),
-        where('isConfirmed', '==', true)
-      );
-      const snap = await getDocs(q);
-      const statements = snap.docs.map(d => ({ id: d.id, ...d.data() } as TaxStatement));
+      const statements = await dbService.getTaxStatements({ fyId: activeFY.id, isConfirmed: 'true' });
       
       if (statements.length === 0) {
         alert("No confirmed statements found for this financial year.");
         return;
       }
 
-      // Fetch teachers for these statements
-      const teacherIds = [...new Set(statements.map(s => s.teacherId))];
-      const teachersSnap = await getDocs(collection(db, 'teachers'));
-      const teachersMap = new Map(teachersSnap.docs.map(d => [d.id, { id: d.id, ...d.data() } as Teacher]));
+      const teachers = await dbService.getAllTeachers();
+      const teachersMap = new Map(teachers.map((t: Teacher) => [t.id, t]));
 
       // Prepare data for bulk print
       const bulkData = statements.map(s => {
@@ -173,10 +159,10 @@ export default function AdminDashboard({ isAdmin }: { isAdmin: boolean }) {
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
           <div className="flex items-center justify-between mb-4">
             <div className="p-2 bg-amber-50 rounded-lg">
-              <Download className="h-6 w-6 text-amber-600" />
+              <Printer className="h-6 w-6 text-amber-600" />
             </div>
           </div>
-          <h3 className="text-gray-500 text-sm font-medium">Bulk Export</h3>
+          <h3 className="text-gray-500 text-sm font-medium">Bulk Reports</h3>
           <div className="mt-4 space-y-3">
             <select 
               value={exportType}

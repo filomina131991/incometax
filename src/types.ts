@@ -75,6 +75,15 @@ export interface Teacher {
   incrementAmount?: number;
   activeFYs?: string[];
   deletedInFY?: string[];
+  defaultPF?: number;
+  defaultGIS?: number;
+  defaultSLI?: number;
+  defaultLIC?: number;
+  defaultMedisep?: number;
+  defaultGPAIS?: number;
+  defaultNPS?: number;
+  defaultTDS?: number;
+  address?: string;
 }
 
 export interface MonthlyData {
@@ -114,8 +123,23 @@ export interface TaxStatement {
   totalTax: number;
   taxDeducted: number;
   balanceTax: number;
+  leaveSurrender?: number;
+  hbaPrincipal?: number;
+  tuitionFees?: number;
   section80C?: number;
   section80D?: number;
+  section80G?: number;
+  section80E?: number;
+  hbaInterest?: number;
+  anyOtherDeductions?: number;
+  annualPF?: number;
+  annualGIS?: number;
+  annualSLI?: number;
+  annualLIC?: number;
+  annualMedisep?: number;
+  annualGPAIS?: number;
+  annualNPS?: number;
+  annualTDS?: number;
   status: 'Draft' | 'Submitted' | 'Approved';
   isConfirmed: boolean;
   isBasicPayUpdated: boolean;

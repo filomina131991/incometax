@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { doc, getDoc, setDoc, addDoc, collection, updateDoc } from 'firebase/firestore';
-import { db, auth } from '../firebase';
+import { dbService, authService } from '../api';
 import { Teacher } from '../types';
 import { Save, ArrowLeft, Calendar, User, Briefcase, CreditCard, Lock, Calculator, Upload, X } from 'lucide-react';
 import { calculateRetirementDate, calculateExperience } from '../lib/retirement';
@@ -55,11 +54,8 @@ export default function TeacherProfile({ isAdmin }: { isAdmin: boolean }) {
 
   async function fetchTeacher() {
     try {
-      const docRef = doc(db, 'teachers', id!);
-      const docSnap = await getDoc(docRef);
-      if (docSnap.exists()) {
-        setTeacher({ id: docSnap.id, ...docSnap.data() } as Teacher);
-      }
+      const data = await dbService.getTeacher(id!);
+      setTeacher(data);
     } catch (error) {
       console.error("Error fetching teacher:", error);
     } finally {
@@ -85,32 +81,34 @@ export default function TeacherProfile({ isAdmin }: { isAdmin: boolean }) {
   async function handleSave() {
     setSaving(true);
     try {
+      const user = authService.getCurrentUser();
       if (id === 'new') {
-        const docRef = await addDoc(collection(db, 'teachers'), teacher);
+        await dbService.addTeacher(teacher);
         
         // Log activity
-        await addDoc(collection(db, 'activities'), {
+        await dbService.logActivity({
           type: 'create',
           description: `Created teacher profile for ${teacher.name}`,
-          userId: auth.currentUser?.uid,
-          userName: auth.currentUser?.displayName || 'Unknown User',
+          userId: user?.id,
+          userName: user?.name || 'Unknown User',
           timestamp: new Date().toISOString()
         });
       } else {
-        await updateDoc(doc(db, 'teachers', id!), teacher);
+        await dbService.updateTeacher(id!, teacher);
 
         // Log activity
-        await addDoc(collection(db, 'activities'), {
+        await dbService.logActivity({
           type: 'update',
           description: `Updated teacher profile for ${teacher.name}`,
-          userId: auth.currentUser?.uid,
-          userName: auth.currentUser?.displayName || 'Unknown User',
+          userId: user?.id,
+          userName: user?.name || 'Unknown User',
           timestamp: new Date().toISOString()
         });
       }
       navigate('/admin/teachers');
     } catch (error) {
       console.error("Error saving teacher:", error);
+      alert("Error saving teacher: " + (error as Error).message);
     } finally {
       setSaving(false);
     }
@@ -203,6 +201,16 @@ export default function TeacherProfile({ isAdmin }: { isAdmin: boolean }) {
                   className="w-full border border-gray-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-500 uppercase mb-1">Residential Address</label>
+              <textarea
+                rows={2}
+                value={teacher.address || ''}
+                onChange={e => setTeacher({ ...teacher, address: e.target.value })}
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Enter full address"
+              />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
@@ -417,6 +425,49 @@ export default function TeacherProfile({ isAdmin }: { isAdmin: boolean }) {
                 placeholder="Leave blank to keep current"
                 className="w-full border border-gray-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500"
               />
+            </div>
+          </div>
+        </section>
+
+        {/* Default Deductions */}
+        <section className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 space-y-4 md:col-span-2">
+          <div className="flex items-center space-x-2 text-red-600 font-bold mb-4">
+            <Calculator className="h-5 w-5" />
+            <span>Default Monthly Deductions</span>
+          </div>
+          
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            <div>
+              <label className="block text-xs font-medium text-gray-500 uppercase mb-1">PF</label>
+              <input type="number" value={teacher.defaultPF || 0} onChange={e => setTeacher({ ...teacher, defaultPF: parseInt(e.target.value) || 0 })} className="w-full border border-gray-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500" />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-500 uppercase mb-1">GIS</label>
+              <input type="number" value={teacher.defaultGIS || 0} onChange={e => setTeacher({ ...teacher, defaultGIS: parseInt(e.target.value) || 0 })} className="w-full border border-gray-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500" />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-500 uppercase mb-1">SLI</label>
+              <input type="number" value={teacher.defaultSLI || 0} onChange={e => setTeacher({ ...teacher, defaultSLI: parseInt(e.target.value) || 0 })} className="w-full border border-gray-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500" />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-500 uppercase mb-1">LIC</label>
+              <input type="number" value={teacher.defaultLIC || 0} onChange={e => setTeacher({ ...teacher, defaultLIC: parseInt(e.target.value) || 0 })} className="w-full border border-gray-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500" />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-500 uppercase mb-1">Medisep</label>
+              <input type="number" value={teacher.defaultMedisep || 0} onChange={e => setTeacher({ ...teacher, defaultMedisep: parseInt(e.target.value) || 0 })} className="w-full border border-gray-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500" />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-500 uppercase mb-1">GPAIS</label>
+              <input type="number" value={teacher.defaultGPAIS || 0} onChange={e => setTeacher({ ...teacher, defaultGPAIS: parseInt(e.target.value) || 0 })} className="w-full border border-gray-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500" />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-500 uppercase mb-1">NPS</label>
+              <input type="number" value={teacher.defaultNPS || 0} onChange={e => setTeacher({ ...teacher, defaultNPS: parseInt(e.target.value) || 0 })} className="w-full border border-gray-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500" />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-500 uppercase mb-1">TDS</label>
+              <input type="number" value={teacher.defaultTDS || 0} onChange={e => setTeacher({ ...teacher, defaultTDS: parseInt(e.target.value) || 0 })} className="w-full border border-gray-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500" />
             </div>
           </div>
         </section>

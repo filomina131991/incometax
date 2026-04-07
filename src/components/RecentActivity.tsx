@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
-import { collection, query, orderBy, limit, getDocs, onSnapshot } from 'firebase/firestore';
-import { db } from '../firebase';
+import { dbService } from '../api';
 import { Activity } from '../types';
 import { formatDistanceToNow } from 'date-fns';
 import { Save, Trash2, Edit2, Plus, CheckCircle, Clock } from 'lucide-react';
@@ -10,16 +9,21 @@ export default function RecentActivity() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const q = query(collection(db, 'activities'), orderBy('timestamp', 'desc'), limit(10));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Activity));
-      setActivities(data);
-      setLoading(false);
-    }, (error) => {
-      console.error("Firestore Error in RecentActivity:", error);
-      setLoading(false);
-    });
-    return unsubscribe;
+    async function fetchActivities() {
+      try {
+        const data = await dbService.getRecentActivities();
+        setActivities(data);
+      } catch (error) {
+        console.error("Error fetching activities:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchActivities();
+    
+    // Optional: could add polling here since we lost Firebase's real-time features
+    const interval = setInterval(fetchActivities, 10000); // 10s refresh
+    return () => clearInterval(interval);
   }, []);
 
   const getIcon = (type: string) => {
