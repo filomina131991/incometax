@@ -35,9 +35,10 @@ interface TaxStatementPrintProps {
     taxDeducted?: number;
   };
   onClose: () => void;
+  isBulk?: boolean;
 }
 
-export default function TaxStatementPrint({ mode, teacher, fy, monthlyData, taxCalc, onClose }: TaxStatementPrintProps) {
+export default function TaxStatementPrint({ mode, teacher, fy, monthlyData, taxCalc, onClose, isBulk }: TaxStatementPrintProps) {
   const [isProcessing, setIsProcessing] = React.useState(false);
   const printRef = useRef<HTMLDivElement>(null);
 
@@ -720,13 +721,11 @@ export default function TaxStatementPrint({ mode, teacher, fy, monthlyData, taxC
     </div>
   );
 
-  return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center p-0 md:p-4 bg-black/60 backdrop-blur-sm print:static print:block print:bg-white print:p-0 print-root print-overlay">
-      {/* Background overlay is hidden by print:static on the parent and actually not rendered by browser during print */}
-
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-5xl h-full md:h-[95vh] flex flex-col overflow-hidden relative print:shadow-none print:max-h-none print:rounded-none print:w-full print:m-0 print:p-0 print:block">
+  const innerContent = (
+    <div className={`bg-white flex flex-col overflow-hidden relative print:shadow-none print:max-h-none print:rounded-none print:w-full print:m-0 print:p-0 print:block ${isBulk ? 'w-full' : 'rounded-xl shadow-2xl w-full max-w-5xl h-full md:h-[95vh]'}`}>
 
         {/* Preview Header - Hidden on Print */}
+        {!isBulk && (
         <div id="preview-header" className="flex items-center justify-between p-4 border-b bg-white print:hidden">
           <div className="flex items-center space-x-2">
             <div className="bg-blue-600 p-1.5 rounded-lg">
@@ -746,9 +745,10 @@ export default function TaxStatementPrint({ mode, teacher, fy, monthlyData, taxC
             <X className="w-6 h-6 text-gray-400 group-hover:text-gray-600" />
           </button>
         </div>
+        )}
 
         {/* Processing Overlay - HIDDEN ON PRINT */}
-        {isProcessing && (
+        {isProcessing && !isBulk && (
           <div className="absolute inset-0 z-[100] bg-white/70 backdrop-blur-[2px] flex items-center justify-center rounded-2xl flex-col print:hidden">
             <div className="bg-white p-6 rounded-3xl shadow-2xl border-2 border-blue-50 flex flex-col items-center gap-4 animate-in fade-in zoom-in duration-300">
               <Loader2 className="w-12 h-12 text-blue-600 animate-spin" />
@@ -774,6 +774,7 @@ export default function TaxStatementPrint({ mode, teacher, fy, monthlyData, taxC
         </div>
 
         {/* Action Footer - Hidden on Print */}
+        {!isBulk && (
         <div id="action-footer" className="p-4 border-t bg-gray-50 flex items-center justify-between print:hidden">
           <div className="hidden md:block">
             <p className="text-xs text-gray-500 font-medium">KSTA Tax System • {mode} Mode</p>
@@ -802,6 +803,7 @@ export default function TaxStatementPrint({ mode, teacher, fy, monthlyData, taxC
             </div>
           </div>
         </div>
+        )}
 
         <style dangerouslySetInnerHTML={{
           __html: `
@@ -917,7 +919,16 @@ export default function TaxStatementPrint({ mode, teacher, fy, monthlyData, taxC
             min-height: 297mm;
           }
         `}} />
-      </div>
+    </div>
+  );
+
+  if (isBulk) {
+    return innerContent;
+  }
+
+  return (
+    <div className="fixed inset-0 z-[200] flex items-center justify-center p-0 md:p-4 bg-black/60 backdrop-blur-sm print:static print:block print:bg-white print:p-0 print-root print-overlay">
+      {innerContent}
     </div>
   );
 }

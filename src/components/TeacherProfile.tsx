@@ -279,6 +279,8 @@ export default function TeacherProfile({ isAdmin }: { isAdmin: boolean }) {
                   <option value="UPST">UPST</option>
                   <option value="HST">HST</option>
                   <option value="VHSE">VHSE</option>
+                  <option value="Cleark">Cleark</option>
+                  <option value="Office Assistant">Office Assistant</option>
                 </select>
               </div>
               <div>

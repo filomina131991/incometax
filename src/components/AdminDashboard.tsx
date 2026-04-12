@@ -7,15 +7,17 @@ import { formatCurrency } from '../lib/utils';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
 import TaxStatementPrint from './TaxStatementPrint';
+import ConsolidatedReportPrint from './ConsolidatedReportPrint';
 import RecentActivity from './RecentActivity';
 
 export default function AdminDashboard({ isAdmin }: { isAdmin: boolean }) {
   const [activeFY, setActiveFY] = useState<FinancialYear | null>(null);
   const [teacherCount, setTeacherCount] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [recentStatements, setRecentStatements] = useState<any[]>([]);
   const [exporting, setExporting] = useState(false);
-  const [exportType, setExportType] = useState<'Anticipatory' | 'Final' | '12BB' | 'Form16'>('Anticipatory');
-  const [bulkPrintData, setBulkPrintData] = useState<{ mode: 'Anticipatory' | 'Final' | '12BB' | 'Form16', statements: any[] } | null>(null);
+  const [exportType, setExportType] = useState<'Anticipatory' | 'Final' | '12BB' | 'Form16' | 'Consolidated'>('Anticipatory');
+  const [bulkPrintData, setBulkPrintData] = useState<{ mode: 'Anticipatory' | 'Final' | '12BB' | 'Form16' | 'Consolidated', statements: any[] } | null>(null);
 
   useEffect(() => {
     async function fetchData() {
@@ -25,6 +27,9 @@ export default function AdminDashboard({ isAdmin }: { isAdmin: boolean }) {
 
         const teachers = await dbService.getAllTeachers();
         setTeacherCount(teachers.length);
+
+        const recentStmts = await dbService.getTaxStatements({ limit: 5, sortBy: 'updatedAt' });
+        setRecentStatements(recentStmts);
       } catch (error) {
         console.error("Error fetching dashboard data:", error);
       } finally {
@@ -39,7 +44,7 @@ export default function AdminDashboard({ isAdmin }: { isAdmin: boolean }) {
     setExporting(true);
     try {
       const statements = await dbService.getTaxStatements({ fyId: activeFY.id, isConfirmed: 'true' });
-      
+
       if (statements.length === 0) {
         alert("No confirmed statements found for this financial year.");
         return;
@@ -50,20 +55,20 @@ export default function AdminDashboard({ isAdmin }: { isAdmin: boolean }) {
 
       // Prepare data for bulk print
       const bulkData = statements.map(s => {
-        const teacher = teachersMap.get(s.teacherId);
+        const teacher = typeof s.teacherId === 'object' ? s.teacherId : teachersMap.get(s.teacherId);
         if (!teacher) return null;
-        
+
         // Mock taxCalc result for print component
         // In a real app, you'd re-calculate or store the full result
         const totals = {
-          total: (s.monthlyData || []).reduce((acc, m) => acc + (m.basicPay + m.da + m.hra + m.ca + m.otherAllowance), 0),
-          totalDeductions: (s.monthlyData || []).reduce((acc, m) => acc + (m.pf + m.gis + m.sli + m.lic + m.medisep + m.gpais + m.nps), 0)
+          total: (s.monthlyData || []).reduce((acc: number, m: any) => acc + (m.basicPay + m.da + m.hra + m.ca + m.otherAllowance), 0),
+          totalDeductions: (s.monthlyData || []).reduce((acc: number, m: any) => acc + (m.pf + m.gis + m.sli + m.lic + m.medisep + m.gpais + m.nps), 0)
         };
-        
+
         const grossSalary = totals.total + (s.festivalAllowance || 0) + (s.daArrear || 0) + (s.payRevisionArrear || 0) + (s.otherIncome || 0);
-        const deductions = s.regime === 'New' ? activeFY.standardDeduction : (activeFY.standardDeductionOld + Math.min(150000, (s.monthlyData || []).reduce((acc, m) => acc + (m.pf + m.nps + m.gis + m.sli + m.lic), 0)) + (s.monthlyData || []).reduce((acc, m) => acc + m.medisep, 0));
+        const deductions = s.regime === 'New' ? activeFY.standardDeduction : (activeFY.standardDeductionOld + Math.min(150000, (s.monthlyData || []).reduce((acc: number, m: any) => acc + (m.pf + m.nps + m.gis + m.sli + m.lic), 0)) + (s.monthlyData || []).reduce((acc: number, m: any) => acc + m.medisep, 0));
         const taxableIncome = Math.max(0, grossSalary - deductions);
-        
+
         return {
           mode: exportType,
           teacher,
@@ -75,12 +80,25 @@ export default function AdminDashboard({ isAdmin }: { isAdmin: boolean }) {
             taxOnTotal: s.taxOnTotalIncome,
             cess: s.cess,
             totalTax: s.totalTax,
-            taxDeducted: s.taxDeducted,
             balance: s.balanceTax,
-            standardDeduction: deductions,
-            totalDeductions: totals.totalDeductions,
+            deductions: s.regime === 'New' ? activeFY.standardDeduction : (activeFY.standardDeductionOld + (s.section80C || 0) + (s.section80D || 0) + (s.section80G || 0) + (s.section80E || 0) + (s.hbaInterest || 0) + (s.anyOtherDeductions || 0)),
+            standardDeduction: s.regime === 'New' ? activeFY.standardDeduction : activeFY.standardDeductionOld,
+            incomeChargeableSalaries: Math.max(0, grossSalary - (s.regime === 'New' ? activeFY.standardDeduction : activeFY.standardDeductionOld)),
+            marginalRelief: s.taxRebate || 0,
             section80C: s.section80C || 0,
-            section80D: s.section80D || 0
+            section80D: s.section80D || 0,
+            section80G: s.section80G || 0,
+            section80E: s.section80E || 0,
+            hbaInterest: s.hbaInterest || 0,
+            anyOtherDeductions: s.anyOtherDeductions || 0,
+            festivalAllowance: s.festivalAllowance || 0,
+            daArrear: s.daArrear || 0,
+            payRevisionArrear: s.payRevisionArrear || 0,
+            otherIncome: s.otherIncome || 0,
+            leaveSurrender: s.leaveSurrender || 0,
+            hbaPrincipal: s.hbaPrincipal || 0,
+            tuitionFees: s.tuitionFees || 0,
+            taxDeducted: s.taxDeducted || 0
           }
         };
       }).filter(Boolean);
@@ -134,7 +152,7 @@ export default function AdminDashboard({ isAdmin }: { isAdmin: boolean }) {
             <div className="mt-4 space-y-1">
               <p className="text-xs text-gray-500">School: <span className="font-medium text-gray-700">{activeFY.schoolName}</span></p>
               <p className="text-xs text-gray-500">
-                DA: <span className="font-medium text-gray-700">{activeFY.monthlyConfig?.[0]?.daPercent}% - {activeFY.monthlyConfig?.[11]?.daPercent}%</span> | 
+                DA: <span className="font-medium text-gray-700">{activeFY.monthlyConfig?.[0]?.daPercent}% - {activeFY.monthlyConfig?.[11]?.daPercent}%</span> |
                 HRA: <span className="font-medium text-gray-700">{activeFY.monthlyConfig?.[0]?.hraPercent}%</span>
               </p>
             </div>
@@ -162,25 +180,26 @@ export default function AdminDashboard({ isAdmin }: { isAdmin: boolean }) {
               <Printer className="h-6 w-6 text-amber-600" />
             </div>
           </div>
-          <h3 className="text-gray-500 text-sm font-medium">Bulk Reports</h3>
+          <h3 className="text-gray-500 text-sm font-medium">Reports</h3>
           <div className="mt-4 space-y-3">
-            <select 
+            <select
               value={exportType}
               onChange={e => setExportType(e.target.value as any)}
               className="w-full text-xs border border-gray-200 rounded-lg px-2 py-1.5 outline-none focus:ring-1 focus:ring-amber-500"
             >
+              <option value="Consolidated">Consolidated TDS</option>
               <option value="Anticipatory">Anticipatory</option>
               <option value="Final">Final</option>
               <option value="12BB">Form 12BB</option>
               <option value="Form16">Form 16 Part B</option>
             </select>
-            <button 
+            <button
               onClick={handleBulkExport}
               disabled={!activeFY || exporting}
               className="w-full bg-amber-600 text-white text-xs font-bold py-2 rounded-lg hover:bg-amber-700 disabled:opacity-50 flex items-center justify-center space-x-2"
             >
               <Printer className="h-3 w-3" />
-              <span>{exporting ? 'Preparing...' : 'Bulk Print Confirmed'}</span>
+              <span>{exporting ? 'Preparing...' : 'Print Report'}</span>
             </button>
           </div>
         </div>
@@ -193,15 +212,27 @@ export default function AdminDashboard({ isAdmin }: { isAdmin: boolean }) {
             </div>
           </div>
           <h3 className="text-gray-500 text-sm font-medium">Quick Actions</h3>
-          <div className="mt-4 space-y-2">
+          <div className="mt-4 space-y-3">
             <Link to="/calculate" className="flex items-center text-sm font-medium text-gray-700 hover:text-green-600">
               <PlusCircle className="h-4 w-4 mr-2" /> New Calculation
             </Link>
             {isAdmin && (
               <Link to="/admin/teachers" className="flex items-center text-sm font-medium text-gray-700 hover:text-purple-600">
-                <PlusCircle className="h-4 w-4 mr-2" /> Add Teacher
+                <Users className="h-4 w-4 mr-2" /> Add Teacher
               </Link>
             )}
+            <button
+              onClick={() => {
+                setExportType('Consolidated');
+                // Use setTimeout to ensure state updates before handling
+                setTimeout(() => handleBulkExport(), 0);
+              }}
+              disabled={!activeFY || exporting}
+              className="flex items-center text-sm font-medium text-gray-700 hover:text-blue-600 w-full text-left disabled:opacity-50"
+            >
+              <FileText className="h-4 w-4 mr-2" />
+              Consolidate Office Report
+            </button>
           </div>
         </div>
       </div>
@@ -210,12 +241,57 @@ export default function AdminDashboard({ isAdmin }: { isAdmin: boolean }) {
         <div className="lg:col-span-2 space-y-8">
           <section className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
             <div className="px-6 py-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
-              <h2 className="text-lg font-bold text-gray-900">Recent Statements</h2>
+              <div className="flex items-center">
+                <FileText className="h-5 w-5 mr-2 text-blue-600" />
+                <h2 className="text-lg font-bold text-gray-900">Recent Statements</h2>
+              </div>
               <Link to="/calculate" className="text-sm text-blue-600 font-bold hover:underline">New Statement</Link>
             </div>
-            <div className="p-6 text-center text-gray-500">
-              <p>No recent tax statements found.</p>
-            </div>
+
+            {recentStatements.length > 0 ? (
+              <div className="divide-y divide-gray-100">
+                {recentStatements.map((stmt, idx) => (
+                  <div key={idx} className="p-5 flex items-center justify-between hover:bg-gray-50 transition-colors">
+                    <div className="flex items-start space-x-4">
+                      <div className={`p-2 rounded-lg mt-1 flex-shrink-0 ${stmt.isConfirmed ? 'bg-green-100 text-green-600' : 'bg-amber-100 text-amber-600'}`}>
+                        <FileText className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-bold text-gray-900">
+                          {stmt.teacherId?.name || 'Unknown Teacher'}
+                          <span className="ml-2 text-xs font-normal text-gray-500">PEN: {stmt.teacherId?.penNumber}</span>
+                        </h4>
+                        <div className="flex items-center space-x-3 mt-1.5">
+                          <span className="text-xs text-gray-500 font-medium px-2 py-0.5 bg-gray-100 rounded-md border border-gray-200">
+                            {stmt.financialYearId?.year}
+                          </span>
+                          <span className="text-xs text-gray-500">
+                            Regime: <span className="font-medium text-gray-700">{stmt.regime}</span>
+                          </span>
+                          <span className="text-xs text-gray-500">
+                            Type: <span className="font-medium text-gray-700">{stmt.type}</span>
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-lg font-bold text-gray-900">
+                        {formatCurrency(stmt.totalTax || 0)}
+                      </div>
+                      <span className={`text-[10px] font-bold uppercase tracking-wider ${stmt.isConfirmed ? 'text-green-600' : 'text-amber-600'}`}>
+                        {stmt.isConfirmed ? 'Confirmed' : 'Draft'}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="p-8 text-center flex flex-col items-center justify-center">
+                <FileText className="h-10 w-10 text-gray-300 mb-3" />
+                <p className="text-gray-500 font-medium text-sm">No recent tax statements found.</p>
+                <p className="text-gray-400 text-xs mt-1">Calculations saved will appear here.</p>
+              </div>
+            )}
           </section>
         </div>
 
@@ -232,41 +308,52 @@ export default function AdminDashboard({ isAdmin }: { isAdmin: boolean }) {
         </div>
       </div>
       {bulkPrintData && (
-        <div className="fixed inset-0 bg-white z-[100] overflow-y-auto p-8 print:p-0">
-          <div className="max-w-4xl mx-auto">
-            <div className="flex justify-between items-center mb-8 print:hidden">
-              <h2 className="text-xl font-bold text-gray-900">Bulk {bulkPrintData.mode} Statements Preview ({bulkPrintData.statements.length})</h2>
-              <div className="space-x-4">
-                <button 
-                  onClick={() => setBulkPrintData(null)}
-                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
-                >
-                  Close
-                </button>
-                <button 
-                  onClick={() => window.print()}
-                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-bold"
-                >
-                  Print All
-                </button>
+        bulkPrintData.mode === 'Consolidated' && activeFY ? (
+          <div className="fixed inset-0 bg-white z-[100] overflow-y-auto p-4 md:p-8 print:p-0">
+            <ConsolidatedReportPrint
+              statements={bulkPrintData.statements}
+              fy={activeFY}
+              onClose={() => setBulkPrintData(null)}
+            />
+          </div>
+        ) : (
+          <div className="fixed inset-0 bg-white z-[100] overflow-y-auto p-8 print:p-0">
+            <div className="max-w-4xl mx-auto">
+              <div className="flex justify-between items-center mb-8 print:hidden">
+                <h2 className="text-xl font-bold text-gray-900">Bulk {bulkPrintData.mode} Statements Preview ({bulkPrintData.statements.length})</h2>
+                <div className="space-x-4">
+                  <button
+                    onClick={() => setBulkPrintData(null)}
+                    className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                  >
+                    Close
+                  </button>
+                  <button
+                    onClick={() => window.print()}
+                    className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-bold"
+                  >
+                    Print All
+                  </button>
+                </div>
+              </div>
+              <div className="space-y-8 print:space-y-0 print:block">
+                {bulkPrintData.statements.map((s, idx) => (
+                  <div key={idx} className={idx < bulkPrintData.statements.length - 1 ? "print:border-0 print:m-0 print:p-0" : "print:border-0 print:m-0 print:p-0"} style={idx < bulkPrintData.statements.length - 1 ? { pageBreakAfter: 'always' } : {}}>
+                    <TaxStatementPrint
+                      mode={s.mode as any}
+                      teacher={s.teacher}
+                      fy={s.fy}
+                      monthlyData={s.monthlyData}
+                      taxCalc={s.taxCalc}
+                      onClose={() => { }} // No-op for bulk print
+                      isBulk={true}
+                    />
+                  </div>
+                ))}
               </div>
             </div>
-            <div className="space-y-8">
-              {bulkPrintData.statements.map((s, idx) => (
-                <div key={idx} className="print:break-after-page">
-                  <TaxStatementPrint 
-                    mode={s.mode}
-                    teacher={s.teacher}
-                    fy={s.fy}
-                    monthlyData={s.monthlyData}
-                    taxCalc={s.taxCalc}
-                    onClose={() => {}} // No-op for bulk print
-                  />
-                </div>
-              ))}
-            </div>
           </div>
-        </div>
+        )
       )}
     </div>
   );

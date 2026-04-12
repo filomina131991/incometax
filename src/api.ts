@@ -144,14 +144,36 @@ export const dbService = {
       method: 'POST',
       body: JSON.stringify(activity),
     });
+  },
+
+  // KSTA
+  async getKstaMembers(fyId: string) {
+    return fetchApi(`/ksta?fyId=${fyId}`);
+  },
+  async importKstaMembers(fyId: string, teacherIds?: string[]) {
+    return fetchApi('/ksta/import', {
+      method: 'POST',
+      body: JSON.stringify({ fyId, teacherIds }),
+    });
+  },
+  async updateKstaMember(id: string, data: any) {
+    return fetchApi(`/ksta/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  },
+  async deleteKstaMember(id: string) {
+    return fetchApi(`/ksta/${id}`, {
+      method: 'DELETE',
+    });
   }
 };
 
 export const authService = {
-  async login(email: string, name: string, googleId?: string) {
+  async login(username: string, password: string) {
     const data = await fetchApi('/auth/login', {
       method: 'POST',
-      body: JSON.stringify({ email, name, googleId }),
+      body: JSON.stringify({ username, password }),
     });
     if (data.token) {
       localStorage.setItem('token', data.token);
@@ -166,6 +188,28 @@ export const authService = {
   getCurrentUser() {
     const userStr = localStorage.getItem('user');
     return userStr ? JSON.parse(userStr) : null;
+  },
+  async getProfile() {
+    return fetchApi('/auth/me');
+  },
+  async updateProfile(data: any) {
+    const result = await fetchApi('/auth/profile', {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+    // Update local storage with new name
+    const user = this.getCurrentUser();
+    if (user && data.name) {
+      user.name = data.name;
+      localStorage.setItem('user', JSON.stringify(user));
+    }
+    return result;
+  },
+  async changePassword(currentPassword: string, newPassword: string) {
+    return fetchApi('/auth/password', {
+      method: 'PATCH',
+      body: JSON.stringify({ currentPassword, newPassword }),
+    });
   }
 };
 

@@ -55,7 +55,7 @@ export interface Teacher {
   panNumber: string;
   aadhaarNumber: string;
   pfNumber: string;
-  designation: 'LPST' | 'UPST' | 'HST' | 'VHSE';
+  designation: 'LPST' | 'UPST' | 'HST' | 'VHSE' | 'Clerk' | 'Office Assistant';
   subject: string;
   mobile?: string;
   email?: string;
@@ -155,4 +155,19 @@ export interface Activity {
   userId: string;
   userName: string;
   timestamp: string;
+}
+
+export interface KstaMember {
+  id?: string;
+  teacherId: Teacher;
+  financialYearId: string;
+  membershipFee: number;
+  yearlyFee: number;
+  diaryIssued: boolean;
+  specialFundPaid: boolean;
+  specialFundName?: string;
+  specialFundAmount?: number;
+  isNewspaperSubscriber?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
 }

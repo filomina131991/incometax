@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { dbService, authService } from '../api';
 import { Teacher, FinancialYear, MonthlyData, TaxStatement } from '../types';
-import { Save, Printer, User, Calendar, Calculator, AlertTriangle, AlertCircle, ChevronRight, ChevronLeft, CheckCircle, Upload, Loader2, X, Users, Box } from 'lucide-react';
+import { Save, Printer, User, Calendar, Calculator, AlertTriangle, AlertCircle, ChevronRight, ChevronLeft, CheckCircle, Upload, Loader2, X, Users, Box, Shuffle } from 'lucide-react';
 import { cn, formatCurrency } from '../lib/utils';
 import { calculateTax, calculateCess } from '../lib/tax';
 import TaxStatementPrint from './TaxStatementPrint';
@@ -126,7 +126,19 @@ export default function TaxCalculator({ isAdmin }: { isAdmin: boolean }) {
 
         if (teacherId) {
           const teacher = teachersList.find(t => t.id === teacherId);
-          if (teacher) handleTeacherSelect(teacher);
+          if (teacher) handleTeacherSelect(teacher, active || null);
+        } else if (!isAdmin) {
+          const profile = await authService.getProfile();
+          let matchedTeacher = profile?.teacher;
+          
+          if (!matchedTeacher && profile?.penNumber) {
+            // Fallback: try finding by pen in teachersList
+            matchedTeacher = teachersList.find(t => t.penNumber === profile.penNumber || t.penNumber === profile.username);
+          }
+          
+          if (matchedTeacher) {
+            handleTeacherSelect(matchedTeacher, active || null);
+          }
         }
       } catch (error) {
         console.error("Error initializing calculator:", error);
@@ -137,18 +149,21 @@ export default function TaxCalculator({ isAdmin }: { isAdmin: boolean }) {
     init();
   }, [teacherId]);
 
-  const handleTeacherSelect = async (teacher: Teacher) => {
+  const handleTeacherSelect = async (teacher: Teacher, fyOverride?: FinancialYear | null) => {
     setSelectedTeacher(teacher);
     setIncrementMonth(teacher.incrementMonth || null);
     setIncrementAmount(teacher.incrementAmount || 0);
 
-    if (activeFY) {
+    // Use the passed FY if available (from init), otherwise fall back to state
+    const fy = fyOverride !== undefined ? fyOverride : activeFY;
+
+    if (fy) {
       try {
         const statements = await dbService.getTaxStatements({ teacherId: teacher.id });
         // Handle both string and object financialYearId
         const existing = statements.find(s => {
           const fyId = typeof s.financialYearId === 'object' ? (s.financialYearId as any).id || (s.financialYearId as any)._id : s.financialYearId;
-          return fyId === activeFY.id;
+          return fyId === fy.id;
         });
 
         if (existing) {
@@ -174,7 +189,7 @@ export default function TaxCalculator({ isAdmin }: { isAdmin: boolean }) {
           setCurrentStatementId(null);
           setIsBasicPayUpdatedInFY(false);
           setIsStatementConfirmed(false);
-          initializeMonthlyData(teacher, activeFY);
+          initializeMonthlyData(teacher, fy);
           setFestivalAllowance(0);
           setDaArrear(0);
           setPayRevisionArrear(0);
@@ -191,7 +206,7 @@ export default function TaxCalculator({ isAdmin }: { isAdmin: boolean }) {
         }
       } catch (error) {
         console.error("Error fetching statement:", error);
-        initializeMonthlyData(teacher, activeFY);
+        initializeMonthlyData(teacher, fy);
       }
     }
   };
@@ -698,13 +713,15 @@ export default function TaxCalculator({ isAdmin }: { isAdmin: boolean }) {
               </button>
 
               {isStatementConfirmed ? (
-                <button
-                  onClick={handleResetStatement}
-                  className="px-4 py-2 bg-red-50 text-red-700 border border-red-200 rounded-lg hover:bg-red-100 flex items-center space-x-2 text-sm font-medium"
-                >
-                  <AlertTriangle className="h-4 w-4" />
-                  <span>Reset</span>
-                </button>
+                isAdmin && (
+                  <button
+                    onClick={handleResetStatement}
+                    className="px-4 py-2 bg-red-50 text-red-700 border border-red-200 rounded-lg hover:bg-red-100 flex items-center space-x-2 text-sm font-medium"
+                  >
+                    <AlertTriangle className="h-4 w-4" />
+                    <span>Reset</span>
+                  </button>
+                )
               ) : (
                 <button
                   onClick={handleConfirmStatement}
@@ -764,29 +781,53 @@ export default function TaxCalculator({ isAdmin }: { isAdmin: boolean }) {
 
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 space-y-6 print:hidden">
           <div className="flex flex-col md:flex-row gap-6 items-end">
-            <div className="flex-1 w-full">
-              <div className="flex justify-between items-center mb-1">
-                <label className="block text-xs font-medium text-gray-500 uppercase">Select Teacher</label>
-                <button
-                  onClick={() => setShowImportModal(true)}
-                  className="text-[10px] font-bold text-blue-600 hover:underline flex items-center"
-                >
-                  <Upload className="h-3 w-3 mr-1" /> Import Teachers for {activeFY.year}
-                </button>
+            {isAdmin ? (
+              <div className="flex-1 w-full">
+                <div className="flex justify-between items-center mb-1">
+                  <label className="block text-xs font-medium text-gray-500 uppercase">Select Teacher</label>
+                  <button
+                    onClick={() => setShowImportModal(true)}
+                    className="text-[10px] font-bold text-blue-600 hover:underline flex items-center"
+                  >
+                    <Upload className="h-3 w-3 mr-1" /> Import Teachers for {activeFY.year}
+                  </button>
+                </div>
+                <div className="flex gap-2">
+                  <select
+                    value={selectedTeacher?.id || ''}
+                    onChange={e => {
+                      const teacher = activeTeachers.find(t => t.id === e.target.value);
+                      if (teacher) handleTeacherSelect(teacher);
+                    }}
+                    className="flex-1 border border-gray-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">-- Choose a teacher ({activeTeachers.length} imported) --</option>
+                    {activeTeachers.map(t => <option key={t.id} value={t.id}>{t.name} ({t.penNumber})</option>)}
+                  </select>
+                  <button
+                    onClick={() => {
+                      if (activeTeachers.length > 0) {
+                        const randomTeacher = activeTeachers[Math.floor(Math.random() * activeTeachers.length)];
+                        handleTeacherSelect(randomTeacher);
+                      }
+                    }}
+                    className="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors border border-blue-100 shadow-sm"
+                    title="Select Random Teacher"
+                  >
+                    <Shuffle className="h-5 w-5" />
+                  </button>
+                </div>
               </div>
-              <select
-                value={selectedTeacher?.id || ''}
-                disabled={isStatementConfirmed}
-                onChange={e => {
-                  const teacher = activeTeachers.find(t => t.id === e.target.value);
-                  if (teacher) handleTeacherSelect(teacher);
-                }}
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
-              >
-                <option value="">-- Choose a teacher ({activeTeachers.length} imported) --</option>
-                {activeTeachers.map(t => <option key={t.id} value={t.id}>{t.name} ({t.penNumber})</option>)}
-              </select>
-            </div>
+            ) : (
+              <div className="flex-1 w-full">
+                <div className="flex justify-between items-center mb-1">
+                  <label className="block text-xs font-medium text-gray-500 uppercase">Your Profile</label>
+                </div>
+                <div className="w-full border border-gray-200 bg-gray-50 rounded-lg px-3 py-2 text-gray-700 font-medium">
+                  {selectedTeacher ? `${selectedTeacher.name} (${selectedTeacher.penNumber})` : 'Teacher profile not found'}
+                </div>
+              </div>
+            )}
             {selectedTeacher && (
               <div className="flex-1 w-full grid grid-cols-2 sm:grid-cols-4 gap-4 bg-blue-50/50 p-3 rounded-xl border border-blue-100">
                 <div>
