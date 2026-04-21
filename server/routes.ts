@@ -32,6 +32,12 @@ const seedAdmin = async () => {
       });
       await admin.save();
       console.log('Default admin user created (admin/admin)');
+    } else {
+      // Force reset password to 'admin' and role to 'admin'
+      existing.password = 'admin';
+      existing.role = 'admin';
+      await existing.save();
+      console.log('Admin password reset to "admin" and role ensured');
     }
 
     // Sync existing teachers → create user accounts if missing
@@ -78,7 +84,7 @@ router.post('/auth/login', async (req, res) => {
 
     const token = jwt.sign(
       { id: user._id, role: user.role, username: user.username },
-      process.env.JWT_SECRET!,
+      process.env.JWT_SECRET || 'your_jwt_secret_here_replace_in_production',
       { expiresIn: '30d' }
     );
     res.json({ token, user: { _id: user._id, username: user.username, name: user.name, role: user.role, penNumber: (user as any).penNumber } });
@@ -92,7 +98,7 @@ const authMiddleware = async (req: any, res: any, next: any) => {
   try {
     const token = req.headers.authorization?.replace('Bearer ', '');
     if (!token) return res.status(401).json({ error: 'No token provided' });
-    const decoded: any = jwt.verify(token, process.env.JWT_SECRET!);
+    const decoded: any = jwt.verify(token, process.env.JWT_SECRET || 'your_jwt_secret_here_replace_in_production');
     const user = await User.findById(decoded.id);
     if (!user) return res.status(401).json({ error: 'User not found' });
     req.user = user;
