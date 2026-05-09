@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { authService } from './api';
-import { LogIn, LogOut, User as UserIcon, Settings, Calculator, Users, Home, Menu, X, BookOpen } from 'lucide-react';
+import { LogIn, LogOut, User as UserIcon, Settings, Calculator, Users, Home, Menu, X, BookOpen, Key, ShieldCheck, ArrowLeft } from 'lucide-react';
 import { cn } from './lib/utils';
 import AdminDashboard from './components/AdminDashboard';
 import UserDashboard from './components/UserDashboard';
@@ -25,13 +25,13 @@ function Navbar({ user, isAdmin }: { user: any; isAdmin: boolean }) {
 
   const NavLinks = () => (
     <>
-      <Link 
-        to="/" 
+      <Link
+        to="/"
         onClick={() => setIsMenuOpen(false)}
         className={cn(
           "px-4 py-2 rounded-xl text-sm font-bold flex items-center transition-all duration-300",
-          isLinkActive('/') 
-            ? "bg-blue-600 text-white shadow-lg shadow-blue-200 scale-105" 
+          isLinkActive('/')
+            ? "bg-blue-600 text-white shadow-lg shadow-blue-200 scale-105"
             : "text-gray-600 hover:text-blue-600 hover:bg-white"
         )}
       >
@@ -39,37 +39,37 @@ function Navbar({ user, isAdmin }: { user: any; isAdmin: boolean }) {
       </Link>
       {isAdmin && (
         <>
-          <Link 
-            to="/admin/fy" 
+          <Link
+            to="/admin/fy"
             onClick={() => setIsMenuOpen(false)}
             className={cn(
               "px-4 py-2 rounded-xl text-sm font-bold flex items-center transition-all duration-300",
-              isLinkActive('/admin/fy') 
-                ? "bg-blue-600 text-white shadow-lg shadow-blue-200 scale-105" 
+              isLinkActive('/admin/fy')
+                ? "bg-blue-600 text-white shadow-lg shadow-blue-200 scale-105"
                 : "text-gray-600 hover:text-blue-600 hover:bg-white"
             )}
           >
             <Settings className="h-4 w-4 mr-2" /> Financial Years
           </Link>
-          <Link 
-            to="/admin/teachers" 
+          <Link
+            to="/admin/teachers"
             onClick={() => setIsMenuOpen(false)}
             className={cn(
               "px-4 py-2 rounded-xl text-sm font-bold flex items-center transition-all duration-300",
-              isLinkActive('/admin/teachers') 
-                ? "bg-blue-600 text-white shadow-lg shadow-blue-200 scale-105" 
+              isLinkActive('/admin/teachers')
+                ? "bg-blue-600 text-white shadow-lg shadow-blue-200 scale-105"
                 : "text-gray-600 hover:text-blue-600 hover:bg-white"
             )}
           >
             <Users className="h-4 w-4 mr-2" /> Teachers
           </Link>
-          <Link 
-            to="/admin/ksta" 
+          <Link
+            to="/admin/ksta"
             onClick={() => setIsMenuOpen(false)}
             className={cn(
               "px-4 py-2 rounded-xl text-sm font-bold flex items-center transition-all duration-300",
-              isLinkActive('/admin/ksta') 
-                ? "bg-blue-600 text-white shadow-lg shadow-blue-200 scale-105" 
+              isLinkActive('/admin/ksta')
+                ? "bg-blue-600 text-white shadow-lg shadow-blue-200 scale-105"
                 : "text-gray-600 hover:text-blue-600 hover:bg-white"
             )}
           >
@@ -77,25 +77,25 @@ function Navbar({ user, isAdmin }: { user: any; isAdmin: boolean }) {
           </Link>
         </>
       )}
-      <Link 
-        to="/calculate" 
+      <Link
+        to="/calculate"
         onClick={() => setIsMenuOpen(false)}
         className={cn(
           "px-4 py-2 rounded-xl text-sm font-bold flex items-center transition-all duration-300",
-          isLinkActive('/calculate') 
-            ? "bg-blue-600 text-white shadow-lg shadow-blue-200 scale-105" 
+          isLinkActive('/calculate')
+            ? "bg-blue-600 text-white shadow-lg shadow-blue-200 scale-105"
             : "text-gray-600 hover:text-blue-600 hover:bg-white"
         )}
       >
         <Calculator className={cn("h-4 w-4 mr-2", isLinkActive('/calculate') ? "animate-pulse" : "")} /> Tax
       </Link>
-      <Link 
-        to="/my-profile" 
+      <Link
+        to="/my-profile"
         onClick={() => setIsMenuOpen(false)}
         className={cn(
           "px-4 py-2 rounded-xl text-sm font-bold flex items-center transition-all duration-300",
-          isLinkActive('/my-profile') 
-            ? "bg-blue-600 text-white shadow-lg shadow-blue-200 scale-105" 
+          isLinkActive('/my-profile')
+            ? "bg-blue-600 text-white shadow-lg shadow-blue-200 scale-105"
             : "text-gray-600 hover:text-blue-600 hover:bg-white"
         )}
       >
@@ -113,17 +113,17 @@ function Navbar({ user, isAdmin }: { user: any; isAdmin: boolean }) {
     <header className="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm print:hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16 items-center">
-            <div className="flex items-center">
-              <Link to="/" className="flex items-center space-x-3 group">
-                <div className="bg-blue-600 p-2 rounded-xl group-hover:scale-110 transition-transform">
-                  <Calculator className="h-6 w-6 text-white" />
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-sm sm:text-lg font-bold text-gray-900 leading-tight whitespace-nowrap">School Tax Manager</span>
-                  <span className="text-[8px] sm:text-[10px] text-gray-500 uppercase tracking-widest font-semibold whitespace-nowrap">Income Tax Calculator</span>
-                </div>
-              </Link>
-            </div>
+          <div className="flex items-center">
+            <Link to="/" className="flex items-center space-x-3 group">
+              <div className="bg-blue-600 p-2 rounded-xl group-hover:scale-110 transition-transform">
+                <Calculator className="h-6 w-6 text-white" />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-sm sm:text-lg font-bold text-gray-900 leading-tight whitespace-nowrap">School Tax Manager</span>
+                <span className="text-[8px] sm:text-[10px] text-gray-500 uppercase tracking-widest font-semibold whitespace-nowrap">Income Tax Calculator</span>
+              </div>
+            </Link>
+          </div>
 
           <div className="flex items-center space-x-4">
             {user ? (
@@ -256,10 +256,20 @@ function LoginView() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [isForgot, setIsForgot] = useState(false);
+  const [resetData, setResetData] = useState({
+    username: '',
+    panNumber: '',
+    secretKey: '',
+    newPassword: '',
+    confirmPassword: ''
+  });
+  const [message, setMessage] = useState('');
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setMessage('');
     setLoading(true);
     try {
       await authService.login(username, password);
@@ -270,6 +280,145 @@ function LoginView() {
       setLoading(false);
     }
   };
+
+  const handleReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setMessage('');
+
+    if (resetData.newPassword !== resetData.confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+
+    if (resetData.newPassword.length < 2) {
+      setError('Password must be at least 2 characters');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await authService.forgotPassword({
+        username: resetData.username,
+        panNumber: resetData.panNumber,
+        secretKey: resetData.secretKey,
+        newPassword: resetData.newPassword
+      });
+      setMessage(response.message || 'Password reset successfully. Please login.');
+      setIsForgot(false);
+      setUsername(resetData.username);
+    } catch (err) {
+      setError((err as Error).message || 'Reset failed. Please verify your information.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (isForgot) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12">
+        <div className="bg-white p-8 rounded-2xl shadow-xl border border-gray-100 max-w-md w-full">
+          <button 
+            onClick={() => setIsForgot(false)}
+            className="flex items-center text-sm text-gray-500 hover:text-blue-600 mb-6 transition-colors"
+          >
+            <ArrowLeft className="h-4 w-4 mr-1" /> Back to Login
+          </button>
+          
+          <div className="text-center mb-8">
+            <div className="bg-blue-100 p-4 rounded-2xl inline-block mb-4">
+              <Key className="h-10 w-10 text-blue-600" />
+            </div>
+            <h1 className="text-2xl font-bold text-gray-900 mb-1">Reset Password</h1>
+            <p className="text-gray-500 text-sm">Verify your identity to set a new password</p>
+          </div>
+
+          {error && (
+            <div className="bg-red-50 border border-red-100 text-red-600 px-4 py-3 rounded-xl mb-6 text-sm flex items-start space-x-2">
+              <X className="h-4 w-4 mt-0.5 flex-shrink-0" />
+              <span>{error}</span>
+            </div>
+          )}
+
+          <form onSubmit={handleReset} className="space-y-4">
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Username</label>
+              <input
+                type="text"
+                required
+                className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all text-sm"
+                value={resetData.username}
+                onChange={(e) => setResetData({...resetData, username: e.target.value})}
+                placeholder="Username or PEN Number"
+              />
+            </div>
+
+            {resetData.username === 'admin' ? (
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Admin Reset Key</label>
+                <div className="relative">
+                  <ShieldCheck className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                  <input
+                    type="password"
+                    required
+                    className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all text-sm"
+                    value={resetData.secretKey}
+                    onChange={(e) => setResetData({...resetData, secretKey: e.target.value})}
+                    placeholder="Enter Admin Secret Key"
+                  />
+                </div>
+                <p className="text-[10px] text-gray-400 mt-1 italic">* Default is admin123 if not set in server env</p>
+              </div>
+            ) : (
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">PAN Number</label>
+                <input
+                  type="text"
+                  required
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all text-sm uppercase"
+                  value={resetData.panNumber}
+                  onChange={(e) => setResetData({...resetData, panNumber: e.target.value.toUpperCase()})}
+                  placeholder="Enter your PAN Number"
+                />
+              </div>
+            )}
+
+            <div className="pt-2 border-t border-gray-50 mt-4">
+              <label className="block text-sm font-semibold text-gray-700 mb-1">New Password</label>
+              <input
+                type="password"
+                required
+                className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all text-sm"
+                value={resetData.newPassword}
+                onChange={(e) => setResetData({...resetData, newPassword: e.target.value})}
+                placeholder="Minimum 2 characters"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Confirm Password</label>
+              <input
+                type="password"
+                required
+                className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all text-sm"
+                value={resetData.confirmPassword}
+                onChange={(e) => setResetData({...resetData, confirmPassword: e.target.value})}
+                placeholder="Confirm new password"
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-100 disabled:opacity-50 mt-4"
+            >
+              {loading ? "Resetting..." : "Reset Password"}
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col items-center justify-center py-12">
@@ -286,6 +435,12 @@ function LoginView() {
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl mb-6 text-sm flex items-center space-x-2">
             <X className="h-4 w-4 flex-shrink-0" />
             <span>{error}</span>
+          </div>
+        )}
+
+        {message && (
+          <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-xl mb-6 text-sm">
+            {message}
           </div>
         )}
 
@@ -309,9 +464,21 @@ function LoginView() {
           </div>
 
           <div>
-            <label htmlFor="password" className="block text-sm font-semibold text-gray-700 mb-1.5">
-              Password
-            </label>
+            <div className="flex justify-between items-center mb-1.5">
+              <label htmlFor="password" className="block text-sm font-semibold text-gray-700">
+                Password
+              </label>
+              <button 
+                type="button"
+                onClick={() => {
+                  setIsForgot(true);
+                  setResetData({...resetData, username: username});
+                }}
+                className="text-xs font-bold text-blue-600 hover:text-blue-700"
+              >
+                Forgot Password?
+              </button>
+            </div>
             <div className="relative">
               <LogIn className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
               <input
@@ -341,13 +508,6 @@ function LoginView() {
             )}
           </button>
         </form>
-
-        <div className="mt-6 pt-5 border-t border-gray-100">
-          <p className="text-xs text-gray-400 text-center">
-            Admin: <span className="font-medium text-gray-500">admin / admin</span> &nbsp;|&nbsp; 
-            Teachers: <span className="font-medium text-gray-500">PEN Number / PEN Number</span>
-          </p>
-        </div>
       </div>
     </div>
   );

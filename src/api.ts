@@ -1,4 +1,5 @@
-const API_URL = import.meta.env.VITE_API_URL || '/api';
+const isProduction = import.meta.env.PROD;
+const API_URL = isProduction ? '/api' : (import.meta.env.VITE_API_URL || '/api');
 
 const mapId = (obj: any) => {
   if (!obj) return obj;
@@ -209,6 +210,12 @@ export const authService = {
     return fetchApi('/auth/password', {
       method: 'PATCH',
       body: JSON.stringify({ currentPassword, newPassword }),
+    });
+  },
+  async forgotPassword(payload: { username: string; panNumber?: string; secretKey?: string; newPassword: string }) {
+    return fetchApi('/auth/forgot-password', {
+      method: 'POST',
+      body: JSON.stringify(payload),
     });
   }
 };

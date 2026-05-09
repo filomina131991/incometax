@@ -19,6 +19,10 @@ mongoose.connect(process.env.MONGODB_URI!)
   .then(() => console.log('Connected to MongoDB'))
   .catch((err) => console.error('MongoDB connection error:', err));
 
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', time: new Date().toISOString(), env: process.env.NODE_ENV });
+});
+
 app.get('/', (req, res) => {
   res.send('Server is running');
 });

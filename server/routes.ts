@@ -33,11 +33,16 @@ const seedAdmin = async () => {
       await admin.save();
       console.log('Default admin user created (admin/admin)');
     } else {
-      // Force reset password to 'admin' and role to 'admin'
-      existing.password = 'admin';
-      existing.role = 'admin';
-      await existing.save();
-      console.log('Admin password reset to "admin" and role ensured');
+      // Ensure role is admin but DON'T force reset password unless explicitly requested via ENV
+      if (existing.role !== 'admin' || process.env.RESET_ADMIN_PASSWORD === 'true') {
+        if (process.env.RESET_ADMIN_PASSWORD === 'true') {
+          existing.password = 'admin';
+          console.log('Admin password explicitly reset to "admin" via ENV flag');
+        }
+        existing.role = 'admin';
+        await existing.save();
+        console.log('Admin role ensured');
+      }
     }
 
     // Sync existing teachers → create user accounts if missing
@@ -218,6 +223,41 @@ router.patch('/auth/password', authMiddleware, async (req: any, res) => {
   }
 });
 
+// Forgot Password / Reset Password
+router.post('/auth/forgot-password', async (req, res) => {
+  const { username, panNumber, secretKey, newPassword } = req.body;
+  try {
+    if (!username || !newPassword) {
+      return res.status(400).json({ error: 'Username and new password are required' });
+    }
+
+    const user = await User.findOne({ username });
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    if (user.role === 'admin') {
+      // Admin reset requires a secret key from environment
+      const systemSecret = process.env.ADMIN_RESET_KEY || 'admin123';
+      if (secretKey !== systemSecret) {
+        return res.status(401).json({ error: 'Invalid admin reset secret key' });
+      }
+    } else {
+      // Teacher reset requires PAN number match
+      const teacher = await Teacher.findOne({ penNumber: user.username });
+      if (!teacher || teacher.panNumber !== panNumber) {
+        return res.status(401).json({ error: 'Identity verification failed. Please check your PAN number.' });
+      }
+    }
+
+    user.password = newPassword;
+    await user.save();
+    res.json({ message: 'Password reset successful. You can now login with your new password.' });
+  } catch (err) {
+    res.status(500).json({ error: (err as Error).message });
+  }
+});
+
 // Financial Years
 router.get('/fy', async (req, res) => {
   try {
@@ -303,10 +343,14 @@ router.patch('/teachers/:id', async (req, res) => {
 
     // If PEN number changed, update the user account
     if (oldTeacher && teacher && req.body.penNumber && oldTeacher.penNumber !== req.body.penNumber) {
-      await User.findOneAndUpdate(
-        { username: oldTeacher.penNumber },
-        { username: teacher.penNumber, password: teacher.penNumber, penNumber: teacher.penNumber, name: teacher.name }
-      );
+      const user = await User.findOne({ username: oldTeacher.penNumber });
+      if (user) {
+        user.username = teacher.penNumber;
+        user.password = teacher.penNumber; // This will trigger the pre-save hook to hash it
+        (user as any).penNumber = teacher.penNumber;
+        user.name = teacher.name;
+        await user.save();
+      }
     }
 
     // If name changed, update user name too
