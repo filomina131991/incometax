@@ -2,7 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
-import apiRoutes from './routes';
+import apiRoutes, { seedAdmin } from './routes';
 
 dotenv.config();
 
@@ -16,18 +16,26 @@ app.use(express.json());
 app.use('/api', apiRoutes);
 
 if (!process.env.MONGODB_URI) {
-  console.warn('MONGODB_URI is not defined in environment variables. Database connection will fail.');
+  console.error('CRITICAL: MONGODB_URI is not defined in environment variables.');
+} else {
+  mongoose.connect(process.env.MONGODB_URI)
+    .then(() => {
+      console.log('Connected to MongoDB');
+      // Run seeding after connection is established
+      seedAdmin().catch(err => console.error('Seed Error:', err));
+    })
+    .catch((err) => {
+      console.error('MongoDB connection error:', err);
+    });
 }
 
-mongoose.connect(process.env.MONGODB_URI!)
-  .then(() => console.log('Connected to MongoDB'))
-  .catch((err) => {
-    console.error('MongoDB connection error:', err);
-    // Don't exit process in serverless, just log
-  });
-
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', time: new Date().toISOString(), env: process.env.NODE_ENV });
+  res.json({ 
+    status: 'ok', 
+    dbState: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
+    time: new Date().toISOString(), 
+    env: process.env.NODE_ENV 
+  });
 });
 
 app.get('/', (req, res) => {

@@ -67,7 +67,8 @@ const seedAdmin = async () => {
     console.error('Error seeding admin:', err);
   }
 };
-seedAdmin();
+// Export seedAdmin so it can be called after DB connection
+export { seedAdmin };
 
 // Auth: Username/Password login
 router.post('/auth/login', async (req, res) => {
@@ -94,7 +95,12 @@ router.post('/auth/login', async (req, res) => {
     );
     res.json({ token, user: { _id: user._id, username: user.username, name: user.name, role: user.role, penNumber: (user as any).penNumber } });
   } catch (err) {
-    res.status(500).json({ error: (err as Error).message });
+    console.error('Login error:', err);
+    res.status(500).json({ 
+      error: 'Internal Server Error', 
+      details: (err as Error).message,
+      stack: process.env.NODE_ENV === 'development' ? (err as Error).stack : undefined
+    });
   }
 });
 
