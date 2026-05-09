@@ -15,9 +15,16 @@ app.use(express.json());
 // Main API Routes
 app.use('/api', apiRoutes);
 
+if (!process.env.MONGODB_URI) {
+  console.warn('MONGODB_URI is not defined in environment variables. Database connection will fail.');
+}
+
 mongoose.connect(process.env.MONGODB_URI!)
   .then(() => console.log('Connected to MongoDB'))
-  .catch((err) => console.error('MongoDB connection error:', err));
+  .catch((err) => {
+    console.error('MongoDB connection error:', err);
+    // Don't exit process in serverless, just log
+  });
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', time: new Date().toISOString(), env: process.env.NODE_ENV });
