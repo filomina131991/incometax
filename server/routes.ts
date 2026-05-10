@@ -1,12 +1,12 @@
 import express from 'express';
-import Teacher from './models/Teacher';
-import FinancialYear from './models/FinancialYear';
-import TaxStatement from './models/TaxStatement';
-import Activity from './models/Activity';
-import User from './models/User';
+import Teacher from './models/Teacher.js';
+import FinancialYear from './models/FinancialYear.js';
+import TaxStatement from './models/TaxStatement.js';
+import Activity from './models/Activity.js';
+import User from './models/User.js';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
-import KstaMember from './models/KstaMember';
+import KstaMember from './models/KstaMember.js';
 
 const router = express.Router();
 
